@@ -2,6 +2,23 @@ import { env } from '../../config/env.js';
 import { AppError } from '../../core/AppError.js';
 import { postJson } from './providerHttp.js';
 
+function pickImageUrl(item) {
+  const imageCandidates = [
+    item.imageUrl,
+    item.image,
+    item.thumbnail,
+    item.mainImage,
+    item.photoUrl,
+    item.coverImage,
+    item.photos?.[0]?.url,
+    item.photos?.[0]?.imageUrl,
+    item.images?.[0],
+    item.imageUrls?.[0]
+  ];
+
+  return imageCandidates.find((url) => typeof url === 'string' && url.startsWith('http')) || '';
+}
+
 function normalizePlace(item) {
   return {
     name: item.title || item.name || '',
@@ -12,6 +29,7 @@ function normalizePlace(item) {
     website: item.website || '',
     phone: item.phone || '',
     price: item.price || item.priceLevel || '',
+    imageUrl: pickImageUrl(item),
     location: item.location || null
   };
 }

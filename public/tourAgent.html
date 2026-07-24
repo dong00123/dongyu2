@@ -116,6 +116,16 @@ textarea { min-height: 116px; resize: vertical; line-height: 1.75; }
     border-radius: 14px; padding: 11px 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.06);
 }
 .save-link.primary { background: var(--gradient); border: none; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.photo-card {
+    overflow: hidden; border-radius: 20px; background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+}
+.photo-card img { width: 100%; height: 160px; object-fit: cover; display: block; background: rgba(255,255,255,0.04); }
+.photo-card-body { padding: 14px; }
+.photo-card-body b { display: block; color: #fff; font-size: 15px; margin-bottom: 8px; }
+.photo-card-body span { display: block; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.photo-card-body .rating { color: var(--accent-4); margin-top: 8px; }
 
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .hero, .panel-inner { padding: 22px; } .form-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } }
@@ -330,6 +340,51 @@ async function refreshAuthState() {
     }
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function buildFallbackPhotoUrl(placeName) {
+    return `https://source.unsplash.com/960x640/?${encodeURIComponent(placeName || "旅行景点")}`;
+}
+
+function renderPlacePhotos(places) {
+    if (!Array.isArray(places) || !places.length) return "";
+
+    const cards = places.map((place) => {
+        const name = escapeHtml(place.name || "推荐景点");
+        const category = escapeHtml(place.category || "城市体验");
+        const address = escapeHtml(place.address || "目的地热门区域");
+        const rating = escapeHtml(place.rating || "");
+        const imageUrl = escapeHtml(place.imageUrl || buildFallbackPhotoUrl(place.name));
+        const fallbackUrl = escapeHtml(buildFallbackPhotoUrl(place.name));
+
+        return `
+            <article class="photo-card">
+                <img src="${imageUrl}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}';">
+                <div class="photo-card-body">
+                    <b>${name}</b>
+                    <span>${category}</span>
+                    <span>${address}</span>
+                    ${rating ? `<span class="rating">评分：${rating}</span>` : ""}
+                </div>
+            </article>
+        `;
+    }).join("");
+
+    return `
+        <section class="result-block">
+            <h4>目的地景点照片参考</h4>
+            <div class="photo-grid">${cards}</div>
+        </section>
+    `;
+}
+
 async function generateTravelPlan() {
     const startCity = document.getElementById("startCity").value.trim();
     const endCity = document.getElementById("endCity").value.trim();
@@ -372,7 +427,8 @@ async function generateTravelPlan() {
         });
 
         const data = await response.json();
-        resultBox.innerHTML = data.html || '<div class="result-block"><div class="result-text">没有拿到有效内容，请稍后重试。</div></div>';
+        const planHtml = data.html || '<div class="result-block"><div class="result-text">没有拿到有效内容，请稍后重试。</div></div>';
+        resultBox.innerHTML = `${planHtml}${renderPlacePhotos(data.placeHighlights)}`;
         statusText.textContent = response.ok ? "方案已生成" : "生成完成，但有提示";
 
         if (response.ok) {

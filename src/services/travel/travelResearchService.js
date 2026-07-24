@@ -127,6 +127,7 @@ export async function researchTravelContext(payload) {
       placeItems,
       `No useful place-level references were found. Please infer lodging, attractions and food suggestions for ${destination}.`
     ),
+    placeItems,
     providerMeta: {
       tavilyResults: tavily.items?.length || 0,
       serperResults: serper.items?.length || 0,

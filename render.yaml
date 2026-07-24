@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: dongyu-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_NAME
+        value: Dongyu Travel Agent
+      - key: BWAI_MODEL
+        value: gpt-5.4-mini
+      - key: APIFY_PLACES_ACTOR_ID
+        value: compass~crawler-google-places
+      - key: TRAVEL_RESEARCH_CACHE_TTL_MS
+        value: 900000
+      - key: PROVIDER_TIMEOUT_MS
+        value: 15000

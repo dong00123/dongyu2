@@ -139,6 +139,32 @@ function extractHtmlContent(modelText) {
 </section>`.trim();
 }
 
+function buildFallbackImageUrl(destination, placeName, index) {
+  const query = encodeURIComponent(`${destination} ${placeName || '城市旅行景点'}`);
+  return `https://source.unsplash.com/960x640/?${query}&sig=${index + 1}`;
+}
+
+function buildPlaceHighlights(context, destination) {
+  const seen = new Set();
+
+  return (context.placeItems || [])
+    .filter((place) => cleanText(place.name))
+    .filter((place) => {
+      const key = cleanText(place.name).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6)
+    .map((place, index) => ({
+      name: cleanText(place.name),
+      category: cleanText(place.category, '推荐景点'),
+      address: cleanText(place.address, `${destination}热门区域`),
+      rating: cleanText(place.rating),
+      imageUrl: cleanText(place.imageUrl) || buildFallbackImageUrl(destination, place.name, index)
+    }));
+}
+
 export async function generateTravelPlan(payload) {
   const startCity = cleanText(payload.startCity);
   const endCity = cleanText(payload.endCity);
@@ -174,6 +200,7 @@ export async function generateTravelPlan(payload) {
   };
 
   const travelContext = await researchTravelContext(normalizedPayload);
+  const placeHighlights = buildPlaceHighlights(travelContext, endCity);
   const prompt = buildTravelPrompt(normalizedPayload, { flightList, trainList }, travelContext);
 
   const data = await createChatCompletion([
@@ -185,6 +212,7 @@ export async function generateTravelPlan(payload) {
 
   return {
     html: extractHtmlContent(data.choices?.[0]?.message?.content),
+    placeHighlights,
     meta: {
       model: env.bwaiModel,
       mode: reqType,
