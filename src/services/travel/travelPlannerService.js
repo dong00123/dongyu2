@@ -144,10 +144,26 @@ function buildFallbackImageUrl(destination, placeName, index) {
   return `https://source.unsplash.com/960x640/?${query}&sig=${index + 1}`;
 }
 
+function buildDefaultPlaceHighlights(destination) {
+  const defaultPlaces = [
+    { name: `${destination}城市地标`, category: '城市地标', address: `${destination}核心观光区域` },
+    { name: `${destination}夜景街区`, category: '夜游体验', address: `${destination}适合晚间散步的区域` },
+    { name: `${destination}历史文化区`, category: '人文体验', address: `${destination}老城或文化片区` },
+    { name: `${destination}本地美食街`, category: '美食体验', address: `${destination}本地餐饮聚集区` },
+    { name: `${destination}自然风光`, category: '自然风景', address: `${destination}城市周边或公园区域` },
+    { name: `${destination}拍照打卡点`, category: '拍照出片', address: `${destination}热门拍照区域` }
+  ];
+
+  return defaultPlaces.map((place, index) => ({
+    ...place,
+    rating: '',
+    imageUrl: buildFallbackImageUrl(destination, place.name, index)
+  }));
+}
+
 function buildPlaceHighlights(context, destination) {
   const seen = new Set();
-
-  return (context.placeItems || [])
+  const places = (context.placeItems || [])
     .filter((place) => cleanText(place.name))
     .filter((place) => {
       const key = cleanText(place.name).toLowerCase();
@@ -163,6 +179,8 @@ function buildPlaceHighlights(context, destination) {
       rating: cleanText(place.rating),
       imageUrl: cleanText(place.imageUrl) || buildFallbackImageUrl(destination, place.name, index)
     }));
+
+  return places.length ? places : buildDefaultPlaceHighlights(destination);
 }
 
 export async function generateTravelPlan(payload) {
