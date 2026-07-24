@@ -206,6 +206,38 @@ function buildPlaceHighlights(context, destination) {
   return places.length ? places : buildDefaultPlaceHighlights(destination, imageItems);
 }
 
+function buildFallbackPlanHtml(payload, reason) {
+  const startCity = cleanText(payload.startCity);
+  const endCity = cleanText(payload.endCity);
+  const startDate = cleanText(payload.startDate);
+  const endDate = cleanText(payload.endDate);
+  const personNum = cleanText(payload.personNum, '未填写');
+  const budget = cleanText(payload.budget, '未填写');
+  const pref = cleanText(payload.pref, '未填写');
+
+  return `
+<section class="result-block">
+  <h4>方案生成提示</h4>
+  <div class="result-text">大模型服务当前不稳定：${cleanText(reason, '请稍后重试')}。下面先展示一份可参考的基础旅行框架，稍后可以重新生成精修版。</div>
+</section>
+<section class="result-block">
+  <h4>基础行程概览</h4>
+  <div class="item-line">出发城市：${startCity}；目的地：${endCity}；日期：${startDate} 至 ${endDate}；人数：${personNum}；预算：${budget} 元。</div>
+  <div class="item-line">偏好：${pref}。</div>
+</section>
+<section class="result-block">
+  <h4>临时交通建议</h4>
+  <div class="item-line">暂未获取到实时票务数据。建议先按高铁、航班、自驾三类方案对比总耗时、到达站位置和晚间抵达便利度。</div>
+  <div class="item-line">如果希望节奏轻松，优先选择白天抵达、少换乘、靠近酒店入住区域的交通方案。</div>
+</section>
+<section class="result-block">
+  <h4>临时游玩节奏</h4>
+  <div class="day-plan">第一天：抵达后办理入住，安排酒店周边轻松散步和本地晚餐，不建议排高强度景点。</div>
+  <div class="day-plan">中间日期：上午安排核心景点，下午安排文化街区或城市公园，晚上安排夜景和美食。</div>
+  <div class="day-plan">返程日：保留半天机动时间，优先安排近距离打卡、伴手礼和从容返程。</div>
+</section>`.trim();
+}
+
 export async function generateTravelPlan(payload) {
   const startCity = cleanText(payload.startCity);
   const endCity = cleanText(payload.endCity);
@@ -244,21 +276,31 @@ export async function generateTravelPlan(payload) {
   const placeHighlights = buildPlaceHighlights(travelContext, endCity);
   const prompt = buildTravelPrompt(normalizedPayload, { flightList, trainList }, travelContext);
 
-  const data = await createChatCompletion([
-    {
-      role: 'user',
-      content: prompt
-    }
-  ]);
+  let html = '';
+  let generationWarning = null;
+
+  try {
+    const data = await createChatCompletion([
+      {
+        role: 'user',
+        content: prompt
+      }
+    ]);
+    html = extractHtmlContent(data.choices?.[0]?.message?.content);
+  } catch (error) {
+    generationWarning = error.message || '上游大模型服务临时不可用';
+    html = buildFallbackPlanHtml(normalizedPayload, generationWarning);
+  }
 
   return {
-    html: extractHtmlContent(data.choices?.[0]?.message?.content),
+    html,
     placeHighlights,
     meta: {
       model: env.bwaiModel,
       mode: reqType,
       flightCount: flightList.length,
       trainCount: trainList.length,
+      generationWarning,
       research: travelContext.providerMeta
     }
   };
