@@ -139,12 +139,11 @@ function extractHtmlContent(modelText) {
 </section>`.trim();
 }
 
-function buildFallbackImageUrl(destination, placeName, index) {
-  const query = encodeURIComponent(`${destination} ${placeName || '城市旅行景点'}`);
-  return `https://source.unsplash.com/960x640/?${query}&sig=${index + 1}`;
+function pickRealImageUrl(imageItems, index) {
+  return cleanText(imageItems[index]?.imageUrl || imageItems[index]?.thumbnailUrl || imageItems[index]?.url);
 }
 
-function buildDefaultPlaceHighlights(destination) {
+function buildDefaultPlaceHighlights(destination, imageItems) {
   const defaultPlaces = [
     { name: `${destination}城市地标`, category: '城市地标', address: `${destination}核心观光区域` },
     { name: `${destination}夜景街区`, category: '夜游体验', address: `${destination}适合晚间散步的区域` },
@@ -154,15 +153,18 @@ function buildDefaultPlaceHighlights(destination) {
     { name: `${destination}拍照打卡点`, category: '拍照出片', address: `${destination}热门拍照区域` }
   ];
 
-  return defaultPlaces.map((place, index) => ({
-    ...place,
-    rating: '',
-    imageUrl: buildFallbackImageUrl(destination, place.name, index)
-  }));
+  return defaultPlaces
+    .map((place, index) => ({
+      ...place,
+      rating: '',
+      imageUrl: pickRealImageUrl(imageItems, index)
+    }))
+    .filter((place) => place.imageUrl);
 }
 
 function buildPlaceHighlights(context, destination) {
   const seen = new Set();
+  const imageItems = context.imageItems || [];
   const places = (context.placeItems || [])
     .filter((place) => cleanText(place.name))
     .filter((place) => {
@@ -177,10 +179,11 @@ function buildPlaceHighlights(context, destination) {
       category: cleanText(place.category, '推荐景点'),
       address: cleanText(place.address, `${destination}热门区域`),
       rating: cleanText(place.rating),
-      imageUrl: cleanText(place.imageUrl) || buildFallbackImageUrl(destination, place.name, index)
-    }));
+      imageUrl: cleanText(place.imageUrl) || pickRealImageUrl(imageItems, index)
+    }))
+    .filter((place) => place.imageUrl);
 
-  return places.length ? places : buildDefaultPlaceHighlights(destination);
+  return places.length ? places : buildDefaultPlaceHighlights(destination, imageItems);
 }
 
 export async function generateTravelPlan(payload) {

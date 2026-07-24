@@ -349,24 +349,26 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
-function buildFallbackPhotoUrl(placeName) {
-    return `https://source.unsplash.com/960x640/?${encodeURIComponent(placeName || "旅行景点")}`;
-}
-
 function renderPlacePhotos(places) {
-    if (!Array.isArray(places) || !places.length) return "";
+    if (!Array.isArray(places) || !places.length) {
+        return `
+            <section class="result-block">
+                <h4>目的地景点照片参考</h4>
+                <div class="result-text">暂时没有拿到可直接展示的真实景点照片。请在 Render 环境变量里配置 SERPER_API_KEY，重新部署后再生成方案。</div>
+            </section>
+        `;
+    }
 
     const cards = places.map((place) => {
         const name = escapeHtml(place.name || "推荐景点");
         const category = escapeHtml(place.category || "城市体验");
         const address = escapeHtml(place.address || "目的地热门区域");
         const rating = escapeHtml(place.rating || "");
-        const imageUrl = escapeHtml(place.imageUrl || buildFallbackPhotoUrl(place.name));
-        const fallbackUrl = escapeHtml(buildFallbackPhotoUrl(place.name));
+        const imageUrl = escapeHtml(place.imageUrl || "");
 
         return `
             <article class="photo-card">
-                <img src="${imageUrl}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}';">
+                <img src="${imageUrl}" alt="${name}" loading="lazy">
                 <div class="photo-card-body">
                     <b>${name}</b>
                     <span>${category}</span>

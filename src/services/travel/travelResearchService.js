@@ -2,7 +2,7 @@ import { env } from '../../config/env.js';
 import { logger } from '../../core/logger.js';
 import { memoryCache } from '../../core/memoryCache.js';
 import { searchPlacesWithApify } from '../providers/apifyPlacesService.js';
-import { searchWithSerper } from '../providers/serperSearchService.js';
+import { searchImagesWithSerper, searchWithSerper } from '../providers/serperSearchService.js';
 import { searchWithTavily } from '../providers/tavilySearchService.js';
 
 function cleanText(value, fallback = '') {
@@ -94,11 +94,13 @@ export async function researchTravelContext(payload) {
   const scenicQuery = `${destination} tourist attractions`;
   const hotelQuery = `${destination} hotels`;
   const foodQuery = `${destination} restaurants food`;
+  const imageQuery = `${destination} 旅游 景点 风景 实拍`;
 
   const tasks = [
     searchWithTavily(broadTravelQuery, 5),
     searchWithSerper(`${localSearchQuery} ${travelDays}`, 6),
-    searchPlacesWithApify([scenicQuery, hotelQuery, foodQuery], 3)
+    searchPlacesWithApify([scenicQuery, hotelQuery, foodQuery], 3),
+    searchImagesWithSerper(imageQuery, 8)
   ];
 
   const results = await Promise.allSettled(tasks);
@@ -106,6 +108,7 @@ export async function researchTravelContext(payload) {
   const tavily = results[0].status === 'fulfilled' ? results[0].value : { provider: 'tavily', enabled: false, items: [] };
   const serper = results[1].status === 'fulfilled' ? results[1].value : { provider: 'serper', enabled: false, items: [] };
   const apify = results[2].status === 'fulfilled' ? results[2].value : { provider: 'apify', enabled: false, items: [] };
+  const serperImages = results[3].status === 'fulfilled' ? results[3].value : { provider: 'serper-images', enabled: false, items: [] };
 
   results.forEach((result) => {
     if (result.status === 'rejected') {
@@ -115,6 +118,7 @@ export async function researchTravelContext(payload) {
 
   const webItems = dedupeWebItems([...(tavily.items || []), ...(serper.items || [])]);
   const placeItems = apify.items || [];
+  const imageItems = serperImages.items || [];
 
   const context = {
     sourceStatus: buildSourceStatus(),
@@ -128,10 +132,12 @@ export async function researchTravelContext(payload) {
       `No useful place-level references were found. Please infer lodging, attractions and food suggestions for ${destination}.`
     ),
     placeItems,
+    imageItems,
     providerMeta: {
       tavilyResults: tavily.items?.length || 0,
       serperResults: serper.items?.length || 0,
-      apifyPlaces: apify.items?.length || 0
+      apifyPlaces: apify.items?.length || 0,
+      serperImages: serperImages.items?.length || 0
     }
   };
 
