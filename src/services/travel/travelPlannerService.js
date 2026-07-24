@@ -16,7 +16,7 @@ function cleanText(value, fallback = '') {
 
 function formatTransportDataset(items, fallbackLabel) {
   if (!items?.length) {
-    return `${fallbackLabel}: no live ticket feed returned. Provide realistic suggestion candidates instead of saying information is missing.`;
+    return `${fallbackLabel}: 暂未获取到实时票务数据。Do not repeat this sentence as multiple cards. Mention it only once in the transport section, then provide estimated transport choices based on common routes.`;
   }
 
   return JSON.stringify(items);
@@ -59,8 +59,9 @@ Hard rules:
    - Travelers: ${personNum}
    - Total budget: ${budget}
    - Preference: ${pref}
-5. If live tickets are unavailable, say only "暂未获取到实时票务数据", but still give realistic transport suggestions for ${startCity} to ${endCity}.
+5. If live tickets are unavailable, mention "暂未获取到实时票务数据" only once in the transport section, then give realistic estimated transport suggestions for ${startCity} to ${endCity}.
 6. Do not say the cities or dates are unclear. They are clear.
+7. Do not create repeated cards, rows, or blocks containing the same unavailable-ticket sentence.
 
 HTML structure rules:
 - Only use these classes: result-block, item-line, date-item, day-plan, result-text
@@ -114,24 +115,43 @@ Output exactly these 12 sections in this order:
 12. 出发前准备清单`;
 }
 
+function normalizeTicketPlaceholder(text) {
+  let seenTicketPlaceholder = false;
+
+  return String(text || '').replace(
+    /<div class="(?:item-line|date-item|day-plan|result-text)">\s*暂未获取到实时票务数据\s*<\/div>/g,
+    (match) => {
+      if (seenTicketPlaceholder) return '';
+      seenTicketPlaceholder = true;
+      return match;
+    }
+  );
+}
+
 function extractHtmlContent(modelText) {
   const text = String(modelText || '').trim();
   const sectionIndex = text.indexOf('<section');
 
   if (sectionIndex >= 0) {
-    return text
-      .slice(sectionIndex)
+    return normalizeTicketPlaceholder(
+      text
+        .slice(sectionIndex)
       .replace(/\?\?/g, '')
       .replace(/\uFFFD/g, '')
       .replace(/no live ticket feed returned yet/gi, '暂未获取到实时票务数据')
-      .trim();
+      .replace(/no live ticket feed returned/gi, '暂未获取到实时票务数据')
+      .trim()
+    );
   }
 
-  const cleaned = text
-    .replace(/\?\?/g, '')
+  const cleaned = normalizeTicketPlaceholder(
+    text
+      .replace(/\?\?/g, '')
     .replace(/\uFFFD/g, '')
     .replace(/no live ticket feed returned yet/gi, '暂未获取到实时票务数据')
-    .trim();
+    .replace(/no live ticket feed returned/gi, '暂未获取到实时票务数据')
+    .trim()
+  );
   return `
 <section class="result-block">
   <h4>方案输出</h4>
