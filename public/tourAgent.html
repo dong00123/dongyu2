@@ -119,13 +119,14 @@ textarea { min-height: 116px; resize: vertical; line-height: 1.75; }
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
 .photo-card {
     overflow: hidden; border-radius: 20px; background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.07); box-shadow: 0 18px 48px rgba(0,0,0,0.24);
 }
 .photo-card img { width: 100%; height: 160px; object-fit: cover; display: block; background: rgba(255,255,255,0.04); }
 .photo-card-body { padding: 14px; }
 .photo-card-body b { display: block; color: #fff; font-size: 15px; margin-bottom: 8px; }
 .photo-card-body span { display: block; color: var(--muted); font-size: 12px; line-height: 1.65; }
 .photo-card-body .rating { color: var(--accent-4); margin-top: 8px; }
+.photo-source-note { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.7; }
 
 @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .hero, .panel-inner { padding: 22px; } .form-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } }
@@ -349,26 +350,94 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
-function renderPlacePhotos(places) {
-    if (!Array.isArray(places) || !places.length) {
-        return `
-            <section class="result-block">
-                <h4>目的地景点照片参考</h4>
-                <div class="result-text">暂时没有拿到可直接展示的真实景点照片。请在 Render 环境变量里配置 SERPER_API_KEY，重新部署后再生成方案。</div>
-            </section>
-        `;
-    }
+function buildSvgPlaceholder(title, subtitle) {
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="960" height="640" viewBox="0 0 960 640">
+            <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#101735"/>
+                    <stop offset="0.55" stop-color="#1b2448"/>
+                    <stop offset="1" stop-color="#3a2b52"/>
+                </linearGradient>
+                <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#ffd66b"/>
+                    <stop offset="1" stop-color="#ff9f6e"/>
+                </linearGradient>
+            </defs>
+            <rect width="960" height="640" fill="url(#bg)"/>
+            <circle cx="760" cy="118" r="72" fill="url(#gold)" opacity="0.92"/>
+            <path d="M0 462 L190 294 L320 398 L478 216 L690 470 L820 356 L960 486 L960 640 L0 640 Z" fill="#090d1f" opacity="0.88"/>
+            <path d="M0 520 L250 365 L430 498 L620 300 L960 540 L960 640 L0 640 Z" fill="#17213f" opacity="0.96"/>
+            <rect x="58" y="54" width="170" height="42" rx="21" fill="rgba(255,255,255,0.12)"/>
+            <text x="74" y="82" fill="#f8f8ff" font-size="22" font-family="Microsoft YaHei, Arial">${escapeHtml(title)}</text>
+            <text x="58" y="138" fill="#ffd66b" font-size="28" font-weight="700" font-family="Microsoft YaHei, Arial">${escapeHtml(subtitle)}</text>
+        </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
-    const cards = places.map((place) => {
+function getDemoPlacePhotos(destination) {
+    const city = destination || "目的地";
+    return [
+        {
+            name: `${city}城市地标`,
+            category: "城市地标",
+            address: `${city}核心观光区域`,
+            rating: "4.8",
+            imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=960&q=80"
+        },
+        {
+            name: `${city}自然风光`,
+            category: "自然风景",
+            address: `${city}城市周边或公园区域`,
+            rating: "4.7",
+            imageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=960&q=80"
+        },
+        {
+            name: `${city}夜景街区`,
+            category: "夜游体验",
+            address: `${city}适合晚间散步的区域`,
+            rating: "4.6",
+            imageUrl: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=960&q=80"
+        },
+        {
+            name: `${city}精品酒店空间`,
+            category: "品质住宿",
+            address: `${city}高便利度商圈`,
+            rating: "4.8",
+            imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=960&q=80"
+        },
+        {
+            name: `${city}历史文化区`,
+            category: "人文体验",
+            address: `${city}老城或文化片区`,
+            rating: "4.5",
+            imageUrl: "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=960&q=80"
+        },
+        {
+            name: `${city}本地美食街`,
+            category: "美食体验",
+            address: `${city}本地餐饮聚集区`,
+            rating: "4.7",
+            imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=960&q=80"
+        }
+    ];
+}
+
+function renderPlacePhotos(places, destination) {
+    const normalizedPlaces = Array.isArray(places) && places.length ? places : getDemoPlacePhotos(destination);
+
+    const cards = normalizedPlaces.map((place) => {
         const name = escapeHtml(place.name || "推荐景点");
         const category = escapeHtml(place.category || "城市体验");
         const address = escapeHtml(place.address || "目的地热门区域");
         const rating = escapeHtml(place.rating || "");
-        const imageUrl = escapeHtml(place.imageUrl || "");
+        const imageUrl = escapeHtml(place.imageUrl || buildSvgPlaceholder(place.name || "旅行", place.category || "风景参考"));
+        const fallbackUrl = escapeHtml(buildSvgPlaceholder(place.name || "旅行", place.category || "风景参考"));
 
         return `
             <article class="photo-card">
-                <img src="${imageUrl}" alt="${name}" loading="lazy">
+                <img src="${imageUrl}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='${fallbackUrl}';">
                 <div class="photo-card-body">
                     <b>${name}</b>
                     <span>${category}</span>
@@ -379,10 +448,15 @@ function renderPlacePhotos(places) {
         `;
     }).join("");
 
+    const sourceNote = Array.isArray(places) && places.length
+        ? "图片来自联网检索结果；若个别图片不可用，会自动切换为高端旅行风格占位图。"
+        : "当前未拿到真实联网图片，已展示一组高端旅行演示卡片；配置 SERPER_API_KEY 后会优先展示真实景点图。";
+
     return `
         <section class="result-block">
             <h4>目的地景点照片参考</h4>
             <div class="photo-grid">${cards}</div>
+            <div class="photo-source-note">${sourceNote}</div>
         </section>
     `;
 }
@@ -430,7 +504,7 @@ async function generateTravelPlan() {
 
         const data = await response.json();
         const planHtml = data.html || '<div class="result-block"><div class="result-text">没有拿到有效内容，请稍后重试。</div></div>';
-        resultBox.innerHTML = `${planHtml}${renderPlacePhotos(data.placeHighlights)}`;
+        resultBox.innerHTML = `${planHtml}${renderPlacePhotos(data.placeHighlights, endCity)}`;
         statusText.textContent = response.ok ? "方案已生成" : "生成完成，但有提示";
 
         if (response.ok) {
