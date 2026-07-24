@@ -17,4 +17,4 @@ services:
       - key: TRAVEL_RESEARCH_CACHE_TTL_MS
         value: 900000
       - key: PROVIDER_TIMEOUT_MS
-        value: 15000
+        value: 45000
