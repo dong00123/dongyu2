@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时响应 - 东玉搜索</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --accent-light: #ff6b6b;
+            --bg: #0f0f1a;
+            --surface: #16213e;
+            --text: #eaeaea;
+            --text-secondary: #a0a0b0;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 80px;
+        }
+        .back-btn {
+            color: var(--accent-light);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .highlight {
+            color: var(--accent-light);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回首页</a>
+        <h1 class="page-title">⚡ 实时响应</h1>
+        <div class="content">
+            <p>东玉搜索采用<strong class="highlight">毫秒级响应架构</strong>，优化了大模型推理链路，告别了传统AI工具的长时间等待。</p>
+            <p>无论你是查资料、写代码还是问问题，都能在几秒内获得完整答案，让信息检索像和朋友对话一样流畅自然。</p>
+            <p>我们通过预加载、边缘计算和模型优化，大幅降低了响应延迟，让你随时都能快速获取有效内容，不用再对着加载动画干等。</p>
+        </div>
+    </div>
+</body>
+</html>

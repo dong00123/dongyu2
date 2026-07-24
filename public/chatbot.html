@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能客服系统v3.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ... 样式部分保持不变，省略 ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        body {
+            display: flex;
+            height: 100vh;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            padding: 24px 0;
+            flex-shrink: 0;
+        }
+        .sidebar-header {
+            text-align: center;
+            padding: 0 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .robot-icon {
+            font-size: 72px;
+            margin-bottom: 8px;
+        }
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .version-tag {
+            font-size: 12px;
+            background: #4080ff;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+        .side-menu-title {
+            padding: 0 24px;
+            font-size: 12px;
+            color: #999;
+            margin: 24px 0 8px;
+        }
+        .side-menu {
+            list-style: none;
+        }
+        .side-menu li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            color: #555;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .side-menu li a.active {
+            background: #e8f0ff;
+            color: #4080ff;
+            border-right: 3px solid #4080ff;
+        }
+        .side-menu li a:hover {
+            background: #f0f6ff;
+            color: #4080ff;
+        }
+        .quick-box {
+            padding: 0 16px;
+            margin-top: 24px;
+        }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .quick-btn {
+            padding: 16px 6px;
+            background: #f0f4ff;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 15px;
+            color: #3366cc;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .quick-btn small {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        .quick-btn:hover {
+            background: #dce8ff;
+        }
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .top-nav {
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+        .nav-left button {
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 16px;
+        }
+        .nav-left .home-btn {
+            background: #e8f0ff;
+            color: #4080ff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .nav-right {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+        .nav-icon {
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+        }
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #f53f3f;
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-user {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #4080ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .page-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .page-item {
+            display: none;
+        }
+        .page-item.show {
+            display: block;
+        }
+        .banner-top {
+            background: linear-gradient(90deg, #5288ff, #9c68f0);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+        .banner-top h1 {
+            font-size: 42px;
+            margin-bottom: 8px;
+        }
+        .banner-top p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .test-status-bar {
+            background: #e6f9e8;
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .status-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            color: #009944;
+            font-weight: 500;
+        }
+        .detail-btn {
+            background: #fff;
+            border: 1px solid #00b450;
+            color: #009944;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .card-main {
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px 24px;
+            margin-bottom: 24px;
+        }
+        .summary-icon {
+            text-align: center;
+            font-size: 64px;
+            color: #36c985;
+            margin-bottom: 12px;
+        }
+        .summary-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .summary-sub {
+            text-align: center;
+            color: #888;
+            margin-bottom: 32px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 16px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-num {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .time-tip {
+            text-align: center;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+        .recent-log {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .log-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 14px;
+        }
+        .chat-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            min-height: 220px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .msg-user {
+            text-align: right;
+            margin: 10px 0;
+        }
+        .msg-user .text {
+            display: inline-block;
+            background: #4080ff;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 12px 12px 2px 12px;
+            max-width: 80%;
+            text-align: left;
+            word-break: break-word;
+        }
+        .msg-bot {
+            text-align: left;
+            margin: 10px 0;
+        }
+        .msg-bot .text {
+            display: inline-block;
+            background: #f0f4ff;
+            color: #333;
+            padding: 10px 14px;
+            border-radius: 12px 12px 12px 2px;
+            max-width: 80%;
+            text-align: left;
+            word-break: break-word;
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+        .loading-msg {
+            color: #999;
+            text-align: left;
+        }
+        .chat-input-area {
+            background: #fff;
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        #userInput:focus {
+            border-color: #4080ff;
+        }
+        #sendBtn {
+            padding: 0 22px;
+            background: #4080ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #sendBtn:hover {
+            background: #2c6fe8;
+        }
+        #sendBtn:disabled {
+            background: #94b8f0;
+            cursor: not-allowed;
+        }
+        .func-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 400px;
+        }
+        .func-card h2 {
+            margin-bottom: 20px;
+            color: #222;
+        }
+        .func-desc {
+            color: #777;
+            margin-bottom: 20px;
+        }
+        .modal-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        .modal-box {
+            background: #fff;
+            width: 520px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            border-radius: 12px;
+        }
+        .modal-box h3 {
+            margin-bottom: 16px;
+        }
+        .modal-close {
+            margin-top: 20px;
+            padding: 8px 20px;
+            background: #4080ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .stat-card-click {
+            cursor: pointer;
+        }
+        .stat-card-click:hover {
+            opacity: 0.85;
+        }
+        .hot-tag-click {
+            cursor: pointer;
+        }
+        .hot-tag-click:hover {
+            background: #ddd;
+        }
+        .tag-blue {
+            padding: 12px 24px;
+            background: #edf4ff;
+            color: #4080ff;
+            border-radius: 12px;
+            font-size: 16px;
+            display: inline-block;
+            margin: 8px;
+            cursor: pointer;
+        }
+        .tag-blue:hover {
+            opacity: 0.85;
+        }
+        .tag-green {
+            padding: 12px 24px;
+            background: #52c462;
+            color: #fff;
+            border-radius: 12px;
+            font-size: 16px;
+            display: inline-block;
+            margin: 8px;
+            cursor: pointer;
+        }
+        .tag-green:hover {
+            opacity: 0.85;
+        }
+        .tag-light {
+            padding: 12px 24px;
+            background: #edf4ff;
+            color: #333;
+            border-radius: 12px;
+            font-size: 16px;
+            display: inline-block;
+            margin: 8px;
+            cursor: pointer;
+        }
+        .tag-light:hover {
+            opacity: 0.85;
+        }
+        .list-click-item {
+            cursor: pointer;
+        }
+        .list-click-item:hover {
+            background: #f5f7fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧侧边栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="robot-icon">🤖</div>
+            <h2>智能客服系统 <span class="version-tag">v3.0</span></h2>
+        </div>
+        <ul class="side-menu">
+            <li><a data-page="home" class="menu-item active">🏠 首页</a></li>
+        </ul>
+        <div class="side-menu-title">设置</div>
+        <ul class="side-menu">
+            <li><a data-page="funcMenu" class="menu-item">⚙️ 功能菜单</a></li>
+            <li><a data-page="knowledge" class="menu-item">📖 知识管理</a></li>
+            <li><a data-page="robotMgr" class="menu-item">🤖 机器人管理</a></li>
+            <li><a data-page="channel" class="menu-item">📡 渠道管理</a></li>
+            <li><a data-page="ticket" class="menu-item">📋 工单管理</a></li>
+            <li><a data-page="data" class="menu-item">📊 数据分析</a></li>
+            <li><a data-page="sysConfig" class="menu-item">🔧 系统配置</a></li>
+            <li><a data-page="role" class="menu-item">👥 角色权限</a></li>
+            <li><a data-page="log" class="menu-item">📜 日志中心</a></li>
+        </ul>
+        <div class="side-menu-title">快捷入口</div>
+        <div class="quick-box">
+            <div class="quick-grid">
+                <div class="quick-btn" onclick="fastAsk('新建知识')">
+                    📖 新建知识
+                    <small>添加知识条目</small>
+                </div>
+                <div class="quick-btn" onclick="switchPage('home')">
+                    💬 测试机器人
+                    <small>调试对话效果</small>
+                </div>
+                <div class="quick-btn" onclick="fastAsk('创建工单')">
+                    📋 创建工单
+                    <small>提交客户工单</small>
+                </div>
+                <div class="quick-btn" onclick="switchPage('data')">
+                    📊 数据看板
+                    <small>查看运营数据</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧主页面 -->
+    <div class="main-wrap">
+        <!-- 顶部导航 -->
+        <div class="top-nav">
+            <div class="nav-left">
+                <button>☰</button>
+                <button class="home-btn" onclick="switchPage('home')">首页</button>
+            </div>
+            <div class="nav-right">
+                <div class="nav-icon" onclick="openDetail('消息通知','这里展示系统通知、用户消息、待办提醒，当前未读12条')">🔔<span class="badge">12</span></div>
+                <div class="nav-icon" onclick="openDetail('帮助中心','系统操作教程、常见问题、客服支持入口')">❓</div>
+                <div class="nav-icon" onclick="openDetail('更多功能','快捷工具、导出、打印、全屏等附加功能')">⛶</div>
+                <div class="admin-user" onclick="openDetail('账号信息','账号：东玉\n角色：超级管理员\n可修改密码、个人资料、权限配置')">东</div>
+                <span>东玉</span>
+            </div>
+        </div>
+        <!-- 多页面容器 -->
+        <div class="page-content">
+            <!-- 1. 首页 -->
+            <div class="page-item show" id="page-home">
+                <div class="banner-top">
+                    <h1>智能客服系统 v3.0</h1>
+                    <p>更智能 · 更高效 · 更贴心</p>
+                </div>
+                <div class="test-status-bar">
+                    <div class="status-text">✅ 所有测试已通过 (7/7)</div>
+                    <button class="detail-btn">查看测试详情 ></button>
+                </div>
+                <div class="card-main">
+                    <div class="summary-icon">📋</div>
+                    <div class="summary-title">系统检测摘要</div>
+                    <div class="summary-sub">智能客服系统 v3.0 | 基于 GPT-4o + LangChain</div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-num">7 个</div>
+                            <div class="stat-label">测试用例</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">7 个</div>
+                            <div class="stat-label">通过用例</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">0 个</div>
+                            <div class="stat-label">失败用例</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">100%</div>
+                            <div class="stat-label">通过率</div>
+                        </div>
+                    </div>
+                    <div class="time-tip">最后检测时间: 2025-05-23 14:30:28</div>
+                    <div class="recent-log">
+                        <div class="log-title">📈 最近动态</div>
+                        <div class="log-item">
+                            <span>测试集 [回归测试-0523] 执行完成</span>
+                            <span>14:30:28</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 对话聊天区域 -->
+                <div class="chat-box" id="chatBox">
+                    <div class="msg-bot">
+                        <div class="text">你好，我是智能客服机器人，请问你有什么问题？</div>
+                    </div>
+                </div>
+                <!-- 弹窗容器 -->
+                <div id="dataModal"></div>
+            </div>
+
+            <!-- 2. 功能菜单 -->
+            <div class="page-item" id="page-funcMenu">
+                <div class="func-card">
+                    <h2>⚙️ 功能菜单管理</h2>
+                    <div class="func-desc">配置机器人支持的业务功能：订单查询、退款处理、产品推荐、人工转接等</div>
+                    <p>后端接口：/api/funcMenu</p>
+                    <h3 style="margin-top:20px;">全部功能列表</h3>
+                    <div style="margin:10px 0;">
+                        <span class="tag-blue" onclick="openDetail('订单查询','【订单查询完整功能+虚构订单示例】\n1. 识别触发：用户输入手机号、订单号、快递单号自动解析；\n2. 可展示完整订单信息：\n订单编号：DD20260707001\n购买商品：夏季纯棉短袖T恤（白色L码）\n实付金额：89.9元 | 下单时间：2026-07-05 19:22\n物流单号：SF1234567890 | 当前状态：运输中\n物流轨迹：7月6日 已揽收 → 7月7日 中转仓发出\n3. 支持状态：待付款、待发货、运输中、已签收、退货中、退款完成；\n4. 自动推送售后、换货、修改收货地址引导话术。')">订单查询</span>
+                        <span class="tag-blue" onclick="openDetail('产品推荐','【产品推荐完整功能+虚构推荐商品示例】\n1. 推荐逻辑：基于用户浏览、咨询、下单记录做协同过滤匹配；\n2. 推送形式：对话末尾自动弹出3款同类商品，搭配优惠活动；\n2. 推送商品示例：\n① 纯棉冰丝短裤 售价59元 搭配T恤满130减30\n② 透气防晒冰袖 售价29.9元 两件8折\n③ 轻薄遮阳帽 售价39元 下单赠送冰袋\n3. 自定义配置：可设置推荐数量、过滤下架商品、限制低价商品；\n4. 业务价值：提升商品转化率，减少人工手动推销。')">产品推荐</span>
+                        <span class="tag-blue" onclick="openDetail('退款处理','【退款处理完整功能+虚构退款订单流程】\n1. 自助操作：用户可发起全额退款、部分退款、仅退运费；\n2. 校验规则：自动判断订单是否满足7天无理由、商品是否已拆封；\n3. 示例退款订单流程：\n订单号：DD20260701005 商品：休闲运动长裤\n用户申请：全额退款 退款原因：尺码偏大\n系统自动校验：满足7天无理由，自动推送退货地址\n商家审核：已同意退款\n预计到账：1-3个工作日原路退回微信支付\n4. 异常处理：拒绝退款时自动推送申诉入口，转人工复核。')">退款处理</span>
+                        <span class="tag-blue" onclick="openDetail('知识查询','检索知识库自动回复常规咨询问题')">知识查询</span>
+                        <span class="tag-blue" onclick="openDetail('转人工','机器人无法解答时自动转接真人客服接待')">转人工</span>
+                    </div>
+                    <h3 style="margin-top:20px;">已启用功能</h3>
+                    <div style="margin:10px 0;">
+                        <span class="tag-green" onclick="openDetail('订单查询','当前状态：已启用\n【订单查询完整功能+虚构订单示例】\n1. 识别触发：用户输入手机号、订单号、快递单号自动解析；\n2. 可展示完整订单信息：\n订单编号：DD20260707001\n购买商品：夏季纯棉短袖T恤（白色L码）\n实付金额：89.9元 | 下单时间：2026-07-05 19:22\n物流单号：SF1234567890 | 当前状态：运输中\n物流轨迹：7月6日 已揽收 → 7月7日 中转仓发出\n3. 支持状态：待付款、待发货、运输中、已签收、退货中、退款完成；\n4. 自动推送售后、换货、修改收货地址引导话术。')">订单查询</span>
+                        <span class="tag-green" onclick="openDetail('产品推荐','当前状态：已启用\n【产品推荐完整功能+虚构推荐商品示例】\n1. 推荐逻辑：基于用户浏览、咨询、下单记录做协同过滤匹配；\n2. 推送形式：对话末尾自动弹出3款同类商品，搭配优惠活动；\n2. 推送商品示例：\n① 纯棉冰丝短裤 售价59元 搭配T恤满130减30\n② 透气防晒冰袖 售价29.9元 两件8折\n③ 轻薄遮阳帽 售价39元 下单赠送冰袋\n3. 自定义配置：可设置推荐数量、过滤下架商品、限制低价商品；\n4. 业务价值：提升商品转化率，减少人工手动推销。')">产品推荐</span>
+                        <span class="tag-green" onclick="openDetail('退款处理','当前状态：已启用\n【退款处理完整功能+虚构退款订单流程】\n1. 自助操作：用户可发起全额退款、部分退款、仅退运费；\n2. 校验规则：自动判断订单是否满足7天无理由、商品是否已拆封；\n3. 示例退款订单流程：\n订单号：DD20260701005 商品：休闲运动长裤\n用户申请：全额退款 退款原因：尺码偏大\n系统自动校验：满足7天无理由，自动推送退货地址\n商家审核：已同意退款\n预计到账：1-3个工作日原路退回微信支付\n4. 异常处理：拒绝退款时自动推送申诉入口，转人工复核。')">退款处理</span>
+                    </div>
+                    <div id="dataModal2"></div>
+                </div>
+            </div>
+
+            <!-- 3. 知识管理 -->
+            <div class="page-item" id="page-knowledge">
+                <div class="func-card">
+                    <h2>📖 知识管理</h2>
+                    <div class="func-desc">新增/编辑/删除知识库条目，机器人根据知识库回答用户问题</div>
+                    <p>后端接口：/api/knowledge</p>
+                    <h3 style="margin-top:20px;margin-bottom:10px;">知识库数据列表</h3>
+                    <div id="knowledgeList"></div>
+                    <div id="dataModal3"></div>
+                </div>
+            </div>
+
+            <!-- 4. 机器人管理 -->
+            <div class="page-item" id="page-robotMgr">
+                <div class="func-card">
+                    <h2>🤖 机器人管理</h2>
+                    <div class="func-desc">创建多个客服机器人、配置模型参数、开关自动回复</div>
+                    <p>后端接口：/api/robot</p>
+                    <div id="robotList"></div>
+                    <div id="dataModal4"></div>
+                </div>
+            </div>
+
+            <!-- 5. 渠道管理 -->
+            <div class="page-item" id="page-channel">
+                <div class="func-card">
+                    <h2>📡 渠道管理</h2>
+                    <div class="func-desc">对接网站、小程序、APP等客服接入渠道</div>
+                    <p>后端接口：/api/channel</p>
+                    <h3 style="margin-top:20px;">已接入渠道</h3>
+                    <div style="margin:10px 0;">
+                        <span class="tag-light" onclick="openDetail('网页客服','官网内嵌客服窗口，访客无需登录即可发起对话')">网页客服</span>
+                        <span class="tag-light" onclick="openDetail('小程序','微信小程序内置客服，支持微信消息推送')">小程序</span>
+                        <span class="tag-light" onclick="openDetail('APP内嵌客服','手机APP原生客服弹窗，支持图文消息')">APP内嵌客服</span>
+                    </div>
+                    <div id="dataModal5"></div>
+                </div>
+            </div>
+
+            <!-- 6. 工单管理 -->
+            <div class="page-item" id="page-ticket">
+                <div class="func-card">
+                    <h2>📋 工单管理</h2>
+                    <div class="func-desc">用户转人工自动生成工单，查看、分配、完结工单</div>
+                    <p>后端接口：/api/ticket</p>
+                    <h3 style="margin-top:20px;margin-bottom:10px;">工单列表</h3>
+                    <div id="ticketList"></div>
+                    <div id="dataModal6"></div>
+                </div>
+            </div>
+
+            <!-- 7. 数据分析 -->
+            <div class="page-item" id="page-data">
+                <div class="func-card">
+                    <h2>📊 数据分析看板</h2>
+                    <div class="func-desc">对话量、问答准确率、工单数量、用户咨询热点统计图表</div>
+                    <p>后端接口：/api/data</p>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;text-align:center;">
+                        <div class="stat-card-click" onclick="openDetail('总对话量', '当前全部用户对话总数：1562 条，今日新增128条，环比上涨8.6%')" style="padding:18px;background:#f0f4ff;border-radius:10px;">
+                            <div style="font-size:26px;font-weight:bold;">1562</div>
+                            <div style="color:#666;margin-top:6px;">总对话量</div>
+                        </div>
+                        <div class="stat-card-click" onclick="openDetail('问答通过率', '机器人自动回答正确率：98.2%，未命中知识会自动转人工工单')" style="padding:18px;background:#e6f9e8;border-radius:10px;">
+                            <div style="font-size:26px;font-weight:bold;color:#009944;">98.2%</div>
+                            <div style="color:#666;margin-top:6px;">问答通过率</div>
+                        </div>
+                        <div class="stat-card-click" onclick="openDetail('总工单数量', '人工介入工单合计：42 单，待处理工单6单，已完成36单')" style="padding:18px;background:#fff3e8;border-radius:10px;">
+                            <div style="font-size:26px;font-weight:bold;color:#f77d36;">42</div>
+                            <div style="color:#666;margin-top:6px;">总工单数量</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:24px;">
+                        <h3>热门咨询问题</h3>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                            <span class="hot-tag-click" onclick="openDetail('热门问题：退款流程','该问题本周被用户咨询46次，可前往【知识管理】完善对应问答内容')" style="padding:8px 16px;background:#eee;border-radius:8px;">退款流程</span>
+                            <span class="hot-tag-click" onclick="openDetail('热门问题：发货时效','该问题本周被用户咨询39次，重点补充物流时效说明')" style="padding:8px 16px;background:#eee;border-radius:8px;">发货时效</span>
+                            <span class="hot-tag-click" onclick="openDetail('热门问题：商品质保','该问题本周被用户咨询32次，完善保修期限问答')" style="padding:8px 16px;background:#eee;border-radius:8px;">商品质保</span>
+                            <span class="hot-tag-click" onclick="openDetail('热门问题：改地址','该问题本周被用户咨询27次，补充下单后改地址规则')" style="padding:8px 16px;background:#eee;border-radius:8px;">改地址</span>
+                        </div>
+                    </div>
+                    <div id="dataModal7"></div>
+                </div>
+            </div>
+
+            <!-- 8. 系统配置 -->
+            <div class="page-item" id="page-sysConfig">
+                <div class="func-card">
+                    <h2>🔧 系统配置</h2>
+                    <div class="func-desc">API密钥、模型地址、回复阈值、欢迎语全局配置</div>
+                    <p>后端接口：/api/config</p>
+                    <div id="sysConfigText"></div>
+                    <div id="dataModal8"></div>
+                </div>
+            </div>
+
+            <!-- 9. 角色权限 -->
+            <div class="page-item" id="page-role">
+                <div class="func-card">
+                    <h2>👥 角色权限管理</h2>
+                    <div class="func-desc">管理员、客服、只读账号权限分配</div>
+                    <p>后端接口：/api/role</p>
+                    <h3 style="margin-top:20px;">系统角色列表</h3>
+                    <div id="roleList"></div>
+                    <div id="dataModal9"></div>
+                </div>
+            </div>
+
+            <!-- 10. 日志中心 -->
+            <div class="page-item" id="page-log">
+                <div class="func-card">
+                    <h2>📜 日志中心</h2>
+                    <div class="func-desc">用户对话日志、操作日志、报错日志查询导出</div>
+                    <p>后端接口：/api/log</p>
+                    <h3 style="margin-top:20px;">操作日志记录</h3>
+                    <div id="logList"></div>
+                    <div id="dataModal10"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部提问输入框 -->
+        <div class="chat-input-area">
+            <div class="input-row">
+                <input type="text" id="userInput" placeholder="请输入你的问题，例如：查询订单、申请退款、产品咨询">
+                <button id="sendBtn">发送</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const API_BASE = "";
+    const chatBox = document.getElementById("chatBox");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    let loading = false;
+
+    // 弹窗核心函数 - 修复：使用固定ID避免冲突
+    function openDetail(title, content) {
+        // 移除已有的弹窗
+        const oldModal = document.querySelector('.modal-mask');
+        if (oldModal) oldModal.remove();
+        
+        const modalBox = `
+            <div class="modal-mask" onclick="closeModal(event)">
+                <div class="modal-box" onclick="event.stopPropagation()">
+                    <h3>${title}</h3>
+                    <p style="line-height:1.7;color:#444;white-space:pre-line;">${content}</p>
+                    <button class="modal-close" onclick="closeModal()">关闭</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalBox);
+    }
+    function closeModal(e) {
+        if(e && e.target !== e.currentTarget) return;
+        const modal = document.querySelector('.modal-mask');
+        if (modal) modal.remove();
+    }
+
+    // 页面切换函数
+    function switchPage(pageName) {
+        document.querySelectorAll(".menu-item").forEach(item=>item.classList.remove("active"));
+        const targetMenuItem = document.querySelector(`.menu-item[data-page="${pageName}"]`);
+        if (targetMenuItem) targetMenuItem.classList.add("active");
+        document.querySelectorAll(".page-item").forEach(p=>p.classList.remove("show"));
+        const targetPage = document.getElementById(`page-${pageName}`);
+        if (targetPage) targetPage.classList.add("show");
+        loadPageData(pageName);
+    }
+    document.querySelectorAll(".menu-item").forEach(item=>{
+        item.addEventListener("click",()=>switchPage(item.getAttribute("data-page")));
+    })
+
+    // 模拟后端静态数据
+    const mockData = {
+        funcMenu: {list: ["订单查询","产品推荐","退款处理","知识查询","转人工"], enable: ["订单查询","产品推荐","退款处理"]},
+        channel: {channels: ["网页客服","小程序","APP内嵌客服"]},
+        role: {roles: ["超级管理员","客服专员","只读查看员"]},
+        log: {logs: [{content:"用户咨询退款流程",time:""},{content:"管理员新增知识库条目",time:""}]},
+        data: {totalChat:1562, passRate:"98.2%", ticketTotal:42, hotQuestion:["退款流程","发货时效","商品质保","改地址"]},
+        knowledge: {list: [{question:"如何申请退款？",answer:"下单7天内未使用商品可申请全额退款，进入订单页点击退款按钮提交申请。"}]},
+        robot: {robots: [{name:"售前客服机器人",model:"gpt-4o",status:true,welcome:"您好，欢迎咨询商品相关问题！"}]},
+        ticket: {list: [{ticketId:"TK20260707001",user:"用户001",type:"退款纠纷",status:"待处理"}]},
+        sysConfig: {welcomeText:"您好，有什么可以帮您？", modelName:"GPT-4o", similarityThreshold:0.75, transferManualSwitch:true}
+    };
+
+    // 各页面渲染逻辑
+    async function loadPageData(page) {
+        switch(page) {
+            case "knowledge":
+                let kHtml = "";
+                mockData.knowledge.list.forEach(item=>{
+                    kHtml += `<div style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;"><div><strong>问题：</strong>${item.question}</div><div style="margin-top:6px;color:#555;"><strong>回答：</strong>${item.answer}</div></div>`;
+                });
+                const kList = document.getElementById("knowledgeList");
+                if (kList) kList.innerHTML = kHtml;
+                break;
+            case "robotMgr":
+                let rHtml = "";
+                mockData.robot.robots.forEach(r=>{
+                    rHtml += `<div style="border:1px solid #eee;padding:14px;border-radius:8px;margin-bottom:10px;"><div><strong>机器人名称：</strong>${r.name}</div><div><strong>使用模型：</strong>${r.model}</div><div><strong>运行状态：</strong>${r.status ? "✅ 正常启用" : "❌ 已关闭"}</div><div><strong>欢迎话术：</strong>${r.welcome}</div></div>`;
+                });
+                const rList = document.getElementById("robotList");
+                if (rList) rList.innerHTML = rHtml;
+                break;
+            case "ticket":
+                let tHtml = "";
+                mockData.ticket.list.forEach(t=>{
+                    tHtml += `<div style="border:1px solid #eee;padding:12px;border-radius:8px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;"><div><div>工单号：${t.ticketId}</div><div>咨询用户：${t.user}</div><div>工单类型：${t.type}</div></div><div style="font-weight:500;color:${t.status==='待处理'?'#f53f3f':'#009944'}">${t.status}</div></div>`;
+                });
+                const tList = document.getElementById("ticketList");
+                if (tList) tList.innerHTML = tHtml;
+                break;
+            case "sysConfig":
+                const cfg = mockData.sysConfig;
+                const sysText = document.getElementById("sysConfigText");
+                if (sysText) sysText.innerHTML = `<div style="margin-top:24px;line-height:2.2;font-size:15px;"><div><strong>机器人欢迎语：</strong>${cfg.welcomeText}</div><div><strong>当前使用模型：</strong>${cfg.modelName}</div><div><strong>知识库匹配阈值：</strong>${cfg.similarityThreshold}</div><div><strong>自动转人工开关：</strong>${cfg.transferManualSwitch ? "已开启" : "已关闭"}</div></div>`;
+                break;
+            case "role":
+                let roleHtml = "";
+                mockData.role.roles.forEach(item=>{
+                    roleHtml += `<div class="list-click-item" onclick="openDetail('${item}','${getRoleDesc(item)}')" style="padding:10px 0;border-bottom:1px solid #eee;">${item}</div>`;
+                });
+                const rList2 = document.getElementById("roleList");
+                if (rList2) rList2.innerHTML = roleHtml;
+                break;
+            case "log":
+                let logHtml = "";
+                mockData.log.logs.forEach(l=>{
+                    logHtml += `<div class="list-click-item" onclick="openDetail('${l.content}','${getLogDesc(l.content)}')" style="padding:10px 0;border-bottom:1px solid #eee;">${l.content}</div>`;
+                });
+                const lList = document.getElementById("logList");
+                if (lList) lList.innerHTML = logHtml;
+                break;
+        }
+    }
+    function getRoleDesc(name) {
+        if(name === "超级管理员") return "拥有系统全部权限，可修改配置、管理账号、导出全部数据";
+        if(name === "客服专员") return "仅可接待用户、处理工单、查看对话数据，无法修改系统配置";
+        return "仅查看数据报表、对话记录，无任何编辑操作权限";
+    }
+    function getLogDesc(text) {
+        if(text === "用户咨询退款流程") return "2026-07-07 10:22 用户发起退款相关咨询，机器人自动回复退款规则";
+        return "2026-07-07 09:15 管理员登录后台新增商品质保问答知识库";
+    }
+
+    loadPageData("home");
+    function fastAsk(text) {
+        userInput.value = text;
+        userInput.focus();
+        // 自动切换到首页，确保能看到聊天框
+        switchPage("home");
+        // 自动发送
+        setTimeout(() => sendQuestion(), 300);
+    }
+
+    // 聊天消息渲染
+    function appendMsg(type, text) {
+        const div = document.createElement("div");
+        div.className = type === "user" ? "msg-user" : "msg-bot";
+        div.innerHTML = `<div class="text">${escapeHtml(text)}</div>`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function escapeHtml(str) {
+        if (!str) return "";
+        let s = str.replace(/&/g,"&amp;");
+        s = s.replace(/</g,"&lt;");
+        s = s.replace(/>/g,"&gt;");
+        return s;
+    }
+
+    // ========== 核心发送函数 - 修复手机号匹配 ==========
+    // 完整的10条订单数据
+    const ORDER_DATA = `根据手机号为您查询到全部10笔历史订单：
+
+【订单1 | 毛先生】
+订单编号：DD20260707001
+购买商品：夏季纯棉短袖T恤（白色L码）
+实付金额：89.9元 | 下单时间：2026-07-05 19:22
+物流单号：SF1234567890 | 当前状态：运输中
+物流轨迹：7月6日 已揽收 → 7月7日 中转仓发出
+
+【订单2 | 杨先生】
+订单编号：DD20260701005
+购买商品：休闲运动长裤（黑色XL）
+实付金额：129元 | 下单时间：2026-07-01 10:15
+物流单号：SF1234567800 | 当前状态：已签收
+售后状态：已申请全额退款，商家审核通过，1-3个工作日原路退回微信支付
+
+【订单3 | 高先生】
+订单编号：DD20260628003
+购买商品：透气防晒冰袖2件装
+实付金额：29.9元 | 下单时间：2026-06-28 09:06
+物流单号：SF1234567799 | 当前状态：已完成
+售后状态：无售后
+
+【订单4 | 尹先生】
+订单编号：DD20260620008
+购买商品：轻薄遮阳帽（米色）
+实付金额：39元 | 下单时间：2026-06-20 14:30
+物流单号：SF1234567788 | 当前状态：已签收
+售后状态：仅退运费10元，已到账
+
+【订单5 | 李先生】
+订单编号：DD20260615002
+购买商品：冰丝短裤（灰色M码）
+实付金额：59元 | 下单时间：2026-06-15 16:20
+物流单号：SF1234567777 | 当前状态：运输中
+物流轨迹：6月16日 已揽收 → 6月17日 中转仓发出
+
+【订单6 | 陈先生】
+订单编号：DD20260610009
+购买商品：纯棉宽松卫衣（浅灰XL）
+实付金额：159元 | 下单时间：2026-06-10 08:45
+物流单号：SF1234567766 | 当前状态：已签收
+售后状态：无售后
+
+【订单7 | 宫先生】
+订单编号：DD20260605004
+购买商品：户外防晒衣（浅蓝L码）
+实付金额：119元 | 下单时间：2026-06-05 11:12
+物流单号：SF1234567755 | 当前状态：待发货
+售后状态：未发起售后
+
+【订单8 | 曹先生】
+订单编号：DD20260601007
+购买商品：透气凉感内裤4条装
+实付金额：49.9元 | 下单时间：2026-06-01 15:33
+物流单号：SF1234567744 | 当前状态：已完成
+售后状态：仅换货，已补发新商品
+
+【订单9 | 刘先生】
+订单编号：DD20260528006
+购买商品：复古工装短裤（卡其色L码）
+实付金额：79元 | 下单时间：2026-05-28 10:05
+物流单号：SF1234567733 | 当前状态：已签收
+售后状态：全额退款完成，资金已原路返还
+
+【订单10 | 韩女士】
+订单编号：DD20265201314
+购买商品：透气防晒冰袖2件装
+实付金额：29.9元 | 下单时间：2026-07-04 09:06
+物流单号：SF1234567799 | 当前状态：已送达
+售后状态：无售后`;
+
+    async function sendQuestion() {
+        if (loading) return;
+        const q = userInput.value.trim();
+        if (!q) return;
+
+        // 确保在首页才能看到聊天
+        const homePage = document.getElementById('page-home');
+        if (!homePage.classList.contains('show')) {
+            switchPage('home');
+            // 等待页面切换完成
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        appendMsg("user", q);
+        userInput.value = "";
+        loading = true;
+        sendBtn.disabled = true;
+
+        const loadingTip = document.createElement("div");
+        loadingTip.className = "loading-msg";
+        loadingTip.innerText = "🔍 正在查询订单，请稍候...";
+        chatBox.appendChild(loadingTip);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        setTimeout(()=>{
+            loadingTip.remove();
+            let reply = "";
+            
+            // 提取手机号：支持纯数字、带空格、带横杠、带括号等格式
+            // 匹配 1 开头，第二位 3-9，后面 9 位数字
+            const phoneMatch = q.match(/1[3-9]\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d\s*[-]?\s*\d/);
+            // 或者更简洁的匹配：去掉空格和横杠后匹配
+            const cleanQ = q.replace(/[\s\-（）()]/g, '');
+            const cleanPhoneMatch = cleanQ.match(/1[3-9]\d{10}/);
+            
+            // 判断是否包含手机号（两种方式任一匹配到即可）
+            const matchedPhone = phoneMatch ? phoneMatch[0].replace(/[\s\-（）()]/g, '') : 
+                                 cleanPhoneMatch ? cleanPhoneMatch[0] : null;
+
+            if (matchedPhone && matchedPhone.length === 11) {
+                // ✅ 匹配到手机号 → 展示9条完整订单
+                reply = `🔍 根据手机号 **${matchedPhone}** 为您查询到全部10笔历史订单：\n\n${ORDER_DATA}`;
+            } else if (q.includes("订单") || q.includes("查询") || q.includes("物流") || q.includes("快递")) {
+                // 包含订单相关关键词但没识别到手机号
+                reply = "📱 您好，请发送完整11位手机号，我为您查询名下全部10条订单物流信息；\n示例手机号：15701397040";
+            } else if (q.includes("退款")) {
+                reply = "💰 您好，支持7天无理由全额退款，您发送手机号，我可以查询对应订单退款入口；";
+            } else if (q.includes("推荐商品") || q.includes("买什么") || q.includes("推荐")) {
+                reply = "🛍️ 本店主推短袖、短裤、防晒三件套，搭配下单满130减30，性价比很高哦！\n您也可以发送手机号，我帮您查询历史购买记录做精准推荐。";
+            } else {
+                reply = "👋 您好，我可以为您查询订单、介绍商品、讲解退款流程，您直接输入手机号即可查询全部10笔历史订单。\n示例手机号：15701397040";
+            }
+            appendMsg("bot", reply);
+            loading = false;
+            sendBtn.disabled = false;
+        }, 1500);
+    }
+
+    // 绑定点击+回车
+    sendBtn.addEventListener("click", sendQuestion);
+    userInput.addEventListener("keydown", e=>{
+        if(e.key === "Enter") sendQuestion();
+    });
+</script>
+</body>
+</html>

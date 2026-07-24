@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私保护 - 东玉搜索</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --accent-light: #ff6b6b;
+            --bg: #0f0f1a;
+            --surface: #16213e;
+            --text: #eaeaea;
+            --text-secondary: #a0a0b0;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 80px;
+        }
+        .back-btn {
+            color: var(--accent-light);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+        .content p {
+            margin-bottom: 1rem;
+        }
+        .highlight {
+            color: var(--accent-light);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回首页</a>
+        <h1 class="page-title">🔒 隐私保护</h1>
+        <div class="content">
+            <p>东玉搜索采用<strong class="highlight">端到端加密技术</strong>，全程保护你的搜索隐私。</p>
+            <p>我们不记录你的搜索历史、不存储你的查询内容，所有数据在传输和处理过程中都经过加密，不会被泄露或用于其他用途。</p>
+            <p>严格的隐私保护机制，让你可以放心查询任何内容，不用担心个人信息被收集或滥用，每一次搜索都安全私密。</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DongYu Voyage Atelier</title>
+<style>
+:root {
+    --bg: #050815;
+    --card: rgba(12, 16, 35, 0.82);
+    --card-strong: rgba(18, 24, 48, 0.96);
+    --line: rgba(152, 170, 255, 0.16);
+    --text: #f7f8ff;
+    --muted: #acb5d6;
+    --accent-3: #72e0cc;
+    --accent-4: #ffd66b;
+    --gradient: linear-gradient(135deg, #7c97ff 0%, #b385ff 45%, #ff7ec0 100%);
+    --shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    min-height: 100vh;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:
+        radial-gradient(circle at 12% 12%, rgba(114, 224, 204, 0.12), transparent 24%),
+        radial-gradient(circle at 82% 15%, rgba(255, 125, 197, 0.1), transparent 22%),
+        radial-gradient(circle at 56% 88%, rgba(131, 162, 255, 0.14), transparent 26%),
+        var(--bg);
+    color: var(--text);
+    padding: 28px 20px 42px;
+}
+
+.shell { max-width: 1520px; margin: 0 auto; }
+.hero, .panel { border-radius: 28px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.hero { background: rgba(9, 13, 30, 0.78); padding: 34px 38px; margin-bottom: 24px; }
+.hero-top, .result-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+.badge, .auth-chip, .auth-link, .auth-btn, .status-pill, .mini-chip {
+    display: inline-flex; align-items: center; gap: 10px; border-radius: 999px;
+    padding: 9px 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+    color: var(--muted); font-size: 12px; text-decoration: none;
+}
+.auth-btn { cursor: pointer; color: #fff; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-3); box-shadow: 0 0 16px rgba(114, 224, 204, 0.65); }
+.hero h1 { margin-top: 18px; font-size: clamp(34px, 5vw, 56px); line-height: 1.04; max-width: 840px; letter-spacing: -1.4px; }
+.hero h1 span { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p, .panel-subtitle, .micro-note, .result-text, .empty-state p, .save-note { color: var(--muted); line-height: 1.85; }
+.hero-tags, .chip-row, .subnav { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero-tags { margin-top: 22px; }
+.subnav { margin-top: 18px; }
+.hero-tag, .chip {
+    border-radius: 999px; padding: 8px 12px; background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08); color: #dbe2ff; font-size: 12px;
+}
+.chip { cursor: pointer; }
+
+.layout { display: grid; grid-template-columns: 430px 1fr; gap: 22px; }
+.panel { background: var(--card); }
+.panel-inner { padding: 28px; }
+.panel-title {
+    display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 700; margin-bottom: 10px;
+}
+.panel-title::before { content: ""; width: 5px; height: 24px; border-radius: 999px; background: var(--gradient); }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+.metric-card, .save-card {
+    padding: 14px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+}
+.metric-card b, .save-card b { display: block; font-size: 16px; margin-bottom: 6px; }
+.metric-card span, .save-card span { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.field, .field-full { display: flex; flex-direction: column; gap: 9px; }
+.field-full { margin-bottom: 18px; }
+label { color: var(--muted); font-size: 13px; }
+input, select, textarea {
+    width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04); color: var(--text); outline: none; font-size: 14px;
+}
+textarea { min-height: 116px; resize: vertical; line-height: 1.75; }
+.generate-btn {
+    width: 100%; border: none; border-radius: 18px; padding: 16px 18px; background: var(--gradient);
+    color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.generate-btn:disabled { opacity: 0.66; cursor: not-allowed; }
+.result-shell { min-height: 760px; display: flex; flex-direction: column; }
+.result-box {
+    flex: 1; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06); padding: 24px;
+}
+.empty-state { min-height: 520px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.empty-icon {
+    width: 92px; height: 92px; border-radius: 28px; display: grid; place-items: center; margin-bottom: 18px;
+    border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); font-size: 34px;
+}
+.loading-skeleton { display: grid; gap: 16px; }
+.skeleton-block {
+    height: 86px; border-radius: 18px;
+    background: linear-gradient(90deg, rgba(124,140,255,0.08) 20%, rgba(124,140,255,0.16) 50%, rgba(124,140,255,0.08) 80%);
+    background-size: 200% 100%; animation: shine 1.2s linear infinite;
+}
+@keyframes shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.result-block {
+    margin-bottom: 22px; padding: 22px; border-radius: 22px; background: var(--card-strong);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.result-block h4 { font-size: 18px; margin-bottom: 14px; color: #f8f8ff; }
+.item-line, .day-plan, .date-item {
+    color: var(--muted); line-height: 1.8; border-radius: 16px; margin-bottom: 12px;
+}
+.item-line, .day-plan { padding: 14px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+.date-item { padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+.save-card { margin-top: 18px; }
+.save-card .save-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.save-link {
+    display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: #fff;
+    border-radius: 14px; padding: 11px 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.06);
+}
+.save-link.primary { background: var(--gradient); border: none; }
+
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .hero, .panel-inner { padding: 22px; } .form-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+    <section class="hero">
+        <div class="hero-top">
+            <div class="badge"><span class="pulse"></span> DongYu Voyage Atelier | 企业级旅游智能体</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div class="auth-chip" id="authStateText">正在检查登录状态</div>
+                <a class="auth-link" href="/auth-center.html">登录中心</a>
+                <a class="auth-link" href="/travel-history.html">旅行历史</a>
+                <button class="auth-btn" id="logoutBtn" type="button" style="display:none;">退出登录</button>
+            </div>
+        </div>
+        <h1>把一次普通出行，<span>打磨成真正像交付稿的旅行方案</span></h1>
+        <p>这个旅游 Agent 会先结合真实检索信息，再生成一份更像高端顾问成品的 HTML 方案。现在已经接入登录体系、旅行历史和收藏能力，生成过的方案可以沉淀下来，后续继续扩展成完整企业项目。</p>
+        <div class="hero-tags">
+            <span class="hero-tag">真实检索增强</span>
+            <span class="hero-tag">高质量 HTML 交付</span>
+            <span class="hero-tag">旅行历史沉淀</span>
+            <span class="hero-tag">收藏与用户中心入口</span>
+        </div>
+        <div class="subnav">
+            <span class="mini-chip">第 2 步已接入：历史记录 + 收藏</span>
+            <span class="mini-chip">登录后生成的方案会自动保存</span>
+        </div>
+    </section>
+
+    <section class="layout">
+        <div class="panel">
+            <div class="panel-inner">
+                <div class="panel-title">行程参数配置</div>
+                <div class="panel-subtitle">填好城市、日期、预算和偏好，系统会输出一份可执行、可参考、尽量避免空话的旅行方案。</div>
+
+                <div class="metrics">
+                    <div class="metric-card"><b>更真实</b><span>优先参考检索结果，再交给模型生成，不只输出泛泛建议。</span></div>
+                    <div class="metric-card"><b>更详细</b><span>按交通、住宿、预算、节奏、每日安排完整拆分。</span></div>
+                    <div class="metric-card"><b>可沉淀</b><span>登录后生成的方案会自动进入历史页，可回看和收藏。</span></div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="startCity">出发城市</label>
+                        <input id="startCity" value="北京" placeholder="例如：北京、上海、广州">
+                    </div>
+                    <div class="field">
+                        <label for="endCity">目的地城市</label>
+                        <input id="endCity" value="郑州" placeholder="例如：杭州、成都、西安">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="startDate">行程开始日期</label>
+                        <input type="date" id="startDate" value="2026-08-14">
+                    </div>
+                    <div class="field">
+                        <label for="endDate">行程结束日期</label>
+                        <input type="date" id="endDate" value="2026-08-17">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="personNum">出行人数</label>
+                        <input type="number" id="personNum" min="1" value="2">
+                    </div>
+                    <div class="field">
+                        <label for="budget">整体预算（元）</label>
+                        <input type="number" id="budget" min="0" value="8000">
+                    </div>
+                </div>
+
+                <div class="field-full">
+                    <label for="reqType">生成模式</label>
+                    <select id="reqType">
+                        <option value="full">完整高配方案</option>
+                        <option value="flight">只看航班与交通建议</option>
+                        <option value="train">只看高铁与交通建议</option>
+                        <option value="hotel">只看住宿与地段建议</option>
+                    </select>
+                </div>
+
+                <div class="field-full">
+                    <label>偏好快捷标签</label>
+                    <div class="chip-row">
+                        <button class="chip" type="button" data-pref="酒店靠近地铁，少走路">酒店靠近地铁</button>
+                        <button class="chip" type="button" data-pref="更看重本地美食和夜游">本地美食</button>
+                        <button class="chip" type="button" data-pref="适合拍照出片，氛围感强">拍照出片</button>
+                        <button class="chip" type="button" data-pref="节奏轻松，不要赶景点">轻松慢游</button>
+                        <button class="chip" type="button" data-pref="预算控制优先，性价比第一">性价比优先</button>
+                        <button class="chip" type="button" data-pref="想有一点品质升级和仪式感">品质升级</button>
+                    </div>
+                </div>
+
+                <div class="field-full">
+                    <label for="pref">个性化出行偏好</label>
+                    <textarea id="pref" placeholder="例如：酒店靠近地铁口，想吃本地美食，节奏不要太赶，安排适合拍照和晚间散步的地方。">酒店靠近地铁，想吃本地美食，最好带一点夜游和拍照出片路线，整体不要太赶。</textarea>
+                </div>
+
+                <button class="generate-btn" id="genBtn">生成更细致的旅行方案</button>
+                <div class="micro-note">提示：登录后本次生成会自动进入旅行历史页，你可以回看方案、标记收藏，再继续迭代。</div>
+                <div class="save-card" id="saveCard" style="display:none;">
+                    <b>方案已保存</b>
+                    <span class="save-note" id="saveNote">这份方案已经进入你的旅行历史。</span>
+                    <div class="save-actions">
+                        <a class="save-link primary" href="/travel-history.html">查看历史记录</a>
+                        <a class="save-link" href="/auth-center.html" id="saveSecondaryLink">前往登录中心</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-inner result-shell">
+                <div class="result-head">
+                    <div>
+                        <div class="panel-title" style="margin-bottom:8px;">旅行方案输出</div>
+                        <div class="panel-subtitle" style="margin-bottom:0;">输出会更偏向顾问式交付，而不是简单列点。</div>
+                    </div>
+                    <div class="status-pill"><span class="pulse"></span><span id="statusText">等待生成</span></div>
+                </div>
+
+                <div class="result-box" id="resultBox">
+                    <div class="empty-state">
+                        <div class="empty-icon">✓</div>
+                        <h3>准备生成你的专属旅行提案</h3>
+                        <p>填写左侧条件后，系统会按交通、住宿、预算、节奏、日程、美食、夜游、拍照、避坑和备选方案的顺序输出内容。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+const API_BASE = "";
+const genBtn = document.getElementById("genBtn");
+const resultBox = document.getElementById("resultBox");
+const statusText = document.getElementById("statusText");
+const prefInput = document.getElementById("pref");
+const authStateText = document.getElementById("authStateText");
+const logoutBtn = document.getElementById("logoutBtn");
+const saveCard = document.getElementById("saveCard");
+const saveNote = document.getElementById("saveNote");
+const saveSecondaryLink = document.getElementById("saveSecondaryLink");
+
+let currentSession = null;
+
+document.querySelectorAll(".chip").forEach((button) => {
+    button.addEventListener("click", () => {
+        const addition = button.dataset.pref || "";
+        const current = prefInput.value.trim();
+        if (!current) {
+            prefInput.value = addition;
+            return;
+        }
+        if (!current.includes(addition)) {
+            prefInput.value = `${current}，${addition}`;
+        }
+    });
+});
+
+function renderLoadingState() {
+    resultBox.innerHTML = `
+        <div class="loading-skeleton">
+            <div class="skeleton-block"></div>
+            <div class="skeleton-block"></div>
+            <div class="skeleton-block"></div>
+            <div class="skeleton-block" style="height:120px;"></div>
+        </div>
+    `;
+}
+
+function hideSaveCard() {
+    saveCard.style.display = "none";
+}
+
+function showSaveCard({ saved }) {
+    saveCard.style.display = "block";
+    if (saved) {
+        saveNote.textContent = "这份方案已经进入你的旅行历史，现在可以去历史页查看和收藏。";
+        saveSecondaryLink.href = "/travel-history.html";
+        saveSecondaryLink.textContent = "继续查看历史";
+    } else {
+        saveNote.textContent = "当前未登录，所以这次方案没有自动保存。登录后再次生成，就会进入旅行历史。";
+        saveSecondaryLink.href = "/auth-center.html";
+        saveSecondaryLink.textContent = "先去登录";
+    }
+}
+
+async function refreshAuthState() {
+    try {
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
+        currentSession = session;
+        if (session.authenticated && session.user) {
+            const identity = session.user.provider || session.user.authType || "local";
+            authStateText.textContent = `已登录：${session.user.nickname}（${identity}）`;
+            logoutBtn.style.display = "inline-flex";
+        } else {
+            authStateText.textContent = "当前未登录";
+            logoutBtn.style.display = "none";
+        }
+    } catch (error) {
+        authStateText.textContent = "登录状态获取失败";
+        logoutBtn.style.display = "none";
+        currentSession = null;
+    }
+}
+
+async function generateTravelPlan() {
+    const startCity = document.getElementById("startCity").value.trim();
+    const endCity = document.getElementById("endCity").value.trim();
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const personNum = document.getElementById("personNum").value;
+    const budget = document.getElementById("budget").value;
+    const reqType = document.getElementById("reqType").value;
+    const pref = prefInput.value.trim();
+
+    if (!startCity || !endCity || !startDate || !endDate) {
+        alert("请完整填写出发城市、目的地和行程日期。");
+        return;
+    }
+
+    if (startDate > endDate) {
+        alert("结束日期不能早于开始日期。");
+        return;
+    }
+
+    genBtn.disabled = true;
+    statusText.textContent = "正在生成更细致的旅行方案";
+    hideSaveCard();
+    renderLoadingState();
+
+    try {
+        const response = await fetch(`${API_BASE}/api/travel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                startCity,
+                endCity,
+                startDate,
+                endDate,
+                personNum,
+                budget,
+                reqType,
+                pref
+            })
+        });
+
+        const data = await response.json();
+        resultBox.innerHTML = data.html || '<div class="result-block"><div class="result-text">没有拿到有效内容，请稍后重试。</div></div>';
+        statusText.textContent = response.ok ? "方案已生成" : "生成完成，但有提示";
+
+        if (response.ok) {
+            showSaveCard({ saved: Boolean(data.historyId && currentSession?.authenticated) });
+        }
+    } catch (error) {
+        resultBox.innerHTML = `
+            <div class="result-block">
+                <h4>生成失败</h4>
+                <div class="result-text">
+                    请求异常：${error.message || "未知错误"}<br>
+                    请确认后端服务已经启动，然后刷新页面重试。
+                </div>
+            </div>
+        `;
+        statusText.textContent = "生成失败";
+    } finally {
+        genBtn.disabled = false;
+    }
+}
+
+logoutBtn.addEventListener("click", async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    await refreshAuthState();
+});
+
+genBtn.addEventListener("click", generateTravelPlan);
+refreshAuthState();
+</script>
+</body>
+</html>

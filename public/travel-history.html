@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DongYu Travel History</title>
+<style>
+:root {
+    --bg: #08101f;
+    --card: rgba(10, 18, 34, 0.88);
+    --card-soft: rgba(255,255,255,0.03);
+    --line: rgba(255,255,255,0.08);
+    --text: #f7f8ff;
+    --muted: #a8b5d7;
+    --accent: linear-gradient(135deg, #5c88ff, #8f6bff, #ff81b5);
+    --gold: #ffd977;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    min-height: 100vh;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 10% 10%, rgba(101, 204, 255, 0.15), transparent 24%),
+        radial-gradient(circle at 90% 8%, rgba(255, 125, 197, 0.12), transparent 26%),
+        linear-gradient(180deg, #06101f 0%, #091427 100%);
+    padding: 28px 20px 40px;
+}
+
+.shell { max-width: 1480px; margin: 0 auto; }
+.hero, .panel {
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+}
+.hero { padding: 32px 36px; margin-bottom: 22px; }
+.hero-top, .panel-head, .top-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; }
+.pill, .nav-link, .ghost-btn, .filter-btn, .fav-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 999px; padding: 10px 14px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04); color: var(--muted); text-decoration: none; cursor: pointer;
+}
+.ghost-btn, .filter-btn, .fav-btn {
+    font-size: 13px;
+}
+.filter-btn.active, .nav-link.primary {
+    color: #fff;
+    background: var(--accent);
+    border: none;
+}
+.hero h1 {
+    margin-top: 16px;
+    margin-bottom: 12px;
+    font-size: clamp(30px, 5vw, 52px);
+    line-height: 1.05;
+}
+.hero p, .panel-subtitle, .meta-row, .empty-copy, .plan-meta, .fav-label { color: var(--muted); line-height: 1.85; }
+.layout { display: grid; grid-template-columns: 420px 1fr; gap: 22px; }
+.panel { padding: 24px; }
+.panel-title {
+    display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 700; margin-bottom: 10px;
+}
+.panel-title::before {
+    content: "";
+    width: 5px; height: 22px; border-radius: 999px; background: var(--accent);
+}
+.panel-subtitle { margin-bottom: 18px; }
+.summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
+.summary-card, .history-card {
+    border-radius: 20px;
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+}
+.summary-card { padding: 16px; }
+.summary-card b { display: block; font-size: 18px; margin-bottom: 6px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.history-list { display: grid; gap: 14px; max-height: 860px; overflow: auto; padding-right: 6px; }
+.history-card { padding: 18px; cursor: pointer; transition: transform .15s ease, border-color .15s ease; }
+.history-card:hover, .history-card.active { transform: translateY(-1px); border-color: rgba(255,255,255,0.2); }
+.history-card.active { box-shadow: inset 0 0 0 1px rgba(124,151,255,0.36); }
+.route-row, .history-head, .detail-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.route-row { margin-bottom: 12px; }
+.route-title { font-size: 18px; font-weight: 700; }
+.date-tag, .type-tag {
+    border-radius: 999px; padding: 6px 10px; font-size: 12px; color: #dfe5ff;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--line);
+}
+.fav-btn {
+    min-width: 90px;
+    color: #fff;
+}
+.fav-btn.active {
+    background: rgba(255, 217, 119, 0.16);
+    border-color: rgba(255, 217, 119, 0.35);
+    color: var(--gold);
+}
+.meta-row { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 13px; }
+.detail-shell { min-height: 860px; }
+.detail-empty {
+    min-height: 760px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+}
+.detail-body { margin-top: 18px; }
+.detail-info {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;
+}
+.detail-info .summary-card { padding: 14px; }
+.detail-plan {
+    border-radius: 22px; border: 1px solid var(--line); background: rgba(255,255,255,0.02); padding: 18px;
+}
+.result-block { margin-bottom: 18px; padding: 18px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); }
+.result-block h4 { margin-bottom: 10px; }
+.item-line, .day-plan, .date-item, .result-text { line-height: 1.85; color: var(--muted); }
+.item-line, .day-plan { padding: 12px 14px; margin-bottom: 10px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); }
+.date-item { padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); margin-bottom: 8px; }
+.empty-copy { max-width: 440px; text-align: center; }
+
+@media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .detail-info, .summary-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+    <section class="hero">
+        <div class="hero-top">
+            <div class="pill">DongYu Travel History</div>
+            <div class="top-actions">
+                <div class="pill" id="authState">正在检查登录状态</div>
+                <a class="nav-link" href="/tourAgent.html">返回旅游 Agent</a>
+                <a class="nav-link" href="/auth-center.html">登录中心</a>
+                <button class="ghost-btn" id="logoutBtn" type="button" style="display:none;">退出登录</button>
+            </div>
+        </div>
+        <h1>旅行历史与收藏中心</h1>
+        <p>这里会沉淀你登录后生成过的旅行方案。你可以快速回看路线、预算、偏好和完整交付内容，也可以把高价值方案标成收藏，后面做用户中心和后台时就能直接接上。</p>
+        <div class="summary-grid">
+            <div class="summary-card"><b id="totalCount">0</b><span>历史方案总数</span></div>
+            <div class="summary-card"><b id="favoriteCount">0</b><span>当前收藏数量</span></div>
+        </div>
+    </section>
+
+    <section class="layout">
+        <div class="panel">
+            <div class="panel-head">
+                <div>
+                    <div class="panel-title">方案列表</div>
+                    <div class="panel-subtitle">支持全部记录和仅看收藏两种视图。</div>
+                </div>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all" type="button">全部记录</button>
+                <button class="filter-btn" data-filter="favorite" type="button">仅看收藏</button>
+                <button class="filter-btn" id="refreshBtn" type="button">刷新列表</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+
+        <div class="panel detail-shell">
+            <div class="panel-head">
+                <div>
+                    <div class="panel-title">方案详情</div>
+                    <div class="panel-subtitle">点击左侧任意一条记录，就能查看完整旅行交付内容。</div>
+                </div>
+            </div>
+            <div id="detailContainer">
+                <div class="detail-empty">
+                    <div class="empty-copy">
+                        <h3 style="margin-bottom:12px;">准备查看你的历史方案</h3>
+                        <p class="empty-copy">如果你已经登录并生成过旅行方案，左侧会自动出现记录；如果还没有历史数据，可以先回旅游 Agent 生成一份。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+const authState = document.getElementById("authState");
+const logoutBtn = document.getElementById("logoutBtn");
+const historyList = document.getElementById("historyList");
+const detailContainer = document.getElementById("detailContainer");
+const totalCount = document.getElementById("totalCount");
+const favoriteCount = document.getElementById("favoriteCount");
+const refreshBtn = document.getElementById("refreshBtn");
+
+let session = null;
+let historyItems = [];
+let activeFilter = "all";
+let activeId = "";
+
+function formatDate(dateText) {
+    if (!dateText) return "-";
+    return dateText;
+}
+
+function formatReqType(reqType) {
+    const mapping = {
+        full: "完整方案",
+        flight: "交通优先",
+        train: "高铁优先",
+        hotel: "住宿优先"
+    };
+    return mapping[reqType] || reqType || "未分类";
+}
+
+function getFilteredItems() {
+    return activeFilter === "favorite"
+        ? historyItems.filter((item) => item.isFavorite)
+        : historyItems;
+}
+
+function updateSummary() {
+    totalCount.textContent = String(historyItems.length);
+    favoriteCount.textContent = String(historyItems.filter((item) => item.isFavorite).length);
+}
+
+function renderEmptyList(message) {
+    historyList.innerHTML = `<div class="history-card"><div class="empty-copy">${message}</div></div>`;
+}
+
+function renderList() {
+    const items = getFilteredItems();
+    historyList.innerHTML = "";
+
+    if (!session?.authenticated) {
+        renderEmptyList("当前还没有登录，先去登录中心完成登录，再生成旅行方案就会自动沉淀到这里。");
+        return;
+    }
+
+    if (!items.length) {
+        renderEmptyList(activeFilter === "favorite" ? "还没有收藏的旅行方案。" : "还没有历史方案，先去旅游 Agent 生成一份吧。");
+        return;
+    }
+
+    items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = `history-card${item.id === activeId ? " active" : ""}`;
+        card.innerHTML = `
+            <div class="history-head">
+                <div class="route-title">${item.startCity} → ${item.endCity}</div>
+                <button class="fav-btn${item.isFavorite ? " active" : ""}" type="button" data-id="${item.id}">
+                    ${item.isFavorite ? "★ 已收藏" : "☆ 收藏"}
+                </button>
+            </div>
+            <div class="route-row">
+                <div class="date-tag">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
+                <div class="type-tag">${formatReqType(item.reqType)}</div>
+            </div>
+            <div class="meta-row">
+                <span>人数：${item.personNum || "-"}</span>
+                <span>预算：${item.budget || "-"}</span>
+                <span>创建时间：${new Date(item.createdAt).toLocaleString("zh-CN")}</span>
+            </div>
+        `;
+
+        card.addEventListener("click", (event) => {
+            if (event.target.closest(".fav-btn")) return;
+            activeId = item.id;
+            renderList();
+            renderDetail(item);
+        });
+
+        const favoriteButton = card.querySelector(".fav-btn");
+        favoriteButton.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            await toggleFavorite(item);
+        });
+
+        historyList.appendChild(card);
+    });
+}
+
+function renderDetail(item) {
+    if (!item) {
+        detailContainer.innerHTML = `
+            <div class="detail-empty">
+                <div class="empty-copy">没有找到对应的历史方案。</div>
+            </div>
+        `;
+        return;
+    }
+
+    detailContainer.innerHTML = `
+        <div class="detail-head">
+            <div>
+                <h3 style="font-size:28px;margin-bottom:8px;">${item.startCity} → ${item.endCity}</h3>
+                <div class="plan-meta">创建时间：${new Date(item.createdAt).toLocaleString("zh-CN")} ｜ 更新时间：${new Date(item.updatedAt).toLocaleString("zh-CN")}</div>
+            </div>
+            <button class="fav-btn${item.isFavorite ? " active" : ""}" id="detailFavoriteBtn" type="button">
+                ${item.isFavorite ? "★ 已收藏" : "☆ 收藏方案"}
+            </button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-info">
+                <div class="summary-card"><b>${formatDate(item.startDate)}</b><span>开始日期</span></div>
+                <div class="summary-card"><b>${formatDate(item.endDate)}</b><span>结束日期</span></div>
+                <div class="summary-card"><b>${formatReqType(item.reqType)}</b><span>方案类型</span></div>
+                <div class="summary-card"><b>${item.personNum || "-"}</b><span>出行人数</span></div>
+                <div class="summary-card"><b>${item.budget || "-"}</b><span>预算</span></div>
+                <div class="summary-card"><b>${item.pref || "未填写"}</b><span>出行偏好</span></div>
+            </div>
+            <div class="detail-plan">${item.planHtml || '<div class="result-block"><div class="result-text">这条历史记录里暂时没有保存方案内容。</div></div>'}</div>
+        </div>
+    `;
+
+    document.getElementById("detailFavoriteBtn").addEventListener("click", async () => {
+        await toggleFavorite(item);
+    });
+}
+
+async function toggleFavorite(item) {
+    const nextFavorite = !item.isFavorite;
+    const response = await fetch(`/api/user/travel-history/${item.id}/favorite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ favorite: nextFavorite })
+    });
+
+    if (!response.ok) {
+        alert("收藏状态更新失败，请稍后重试。");
+        return;
+    }
+
+    historyItems = historyItems.map((current) =>
+        current.id === item.id
+            ? { ...current, isFavorite: nextFavorite, updatedAt: new Date().toISOString() }
+            : current
+    );
+
+    const latest = historyItems.find((current) => current.id === item.id);
+    updateSummary();
+    renderList();
+    if (latest && activeId === item.id) {
+        renderDetail(latest);
+    }
+}
+
+async function loadSession() {
+    const response = await fetch("/api/auth/session");
+    session = await response.json();
+    if (session.authenticated && session.user) {
+        const identity = session.user.provider || session.user.authType || "local";
+        authState.textContent = `已登录：${session.user.nickname}（${identity}）`;
+        logoutBtn.style.display = "inline-flex";
+    } else {
+        authState.textContent = "当前未登录";
+        logoutBtn.style.display = "none";
+    }
+}
+
+async function loadHistory() {
+    if (!session?.authenticated) {
+        historyItems = [];
+        activeId = "";
+        updateSummary();
+        renderList();
+        return;
+    }
+
+    const response = await fetch("/api/user/travel-history");
+    if (!response.ok) {
+        historyItems = [];
+        activeId = "";
+        updateSummary();
+        renderList();
+        detailContainer.innerHTML = `
+            <div class="detail-empty">
+                <div class="empty-copy">历史数据加载失败，请刷新页面重试。</div>
+            </div>
+        `;
+        return;
+    }
+
+    const data = await response.json();
+    historyItems = data.list || [];
+    updateSummary();
+
+    const filtered = getFilteredItems();
+    if (!filtered.some((item) => item.id === activeId)) {
+        activeId = filtered[0]?.id || "";
+    }
+
+    renderList();
+    if (activeId) {
+        renderDetail(filtered.find((item) => item.id === activeId) || historyItems.find((item) => item.id === activeId));
+    } else {
+        detailContainer.innerHTML = `
+            <div class="detail-empty">
+                <div class="empty-copy">还没有可展示的历史方案。</div>
+            </div>
+        `;
+    }
+}
+
+document.querySelectorAll(".filter-btn[data-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll(".filter-btn[data-filter]").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+
+        const filtered = getFilteredItems();
+        if (!filtered.some((item) => item.id === activeId)) {
+            activeId = filtered[0]?.id || "";
+        }
+
+        renderList();
+        if (activeId) {
+            renderDetail(filtered.find((item) => item.id === activeId) || historyItems.find((item) => item.id === activeId));
+        } else {
+            detailContainer.innerHTML = `
+                <div class="detail-empty">
+                    <div class="empty-copy">${activeFilter === "favorite" ? "还没有收藏的旅行方案。" : "还没有历史方案。"} </div>
+                </div>
+            `;
+        }
+    });
+});
+
+refreshBtn.addEventListener("click", loadHistory);
+logoutBtn.addEventListener("click", async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    await loadSession();
+    await loadHistory();
+});
+
+(async function init() {
+    await loadSession();
+    await loadHistory();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多模态解析 - 东玉</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --accent-light: #ff6b6b;
+            --bg: #0f0f1a;
+            --surface: #16213e;
+            --border: #2a2a4a;
+            --text: #eaeaea;
+            --text-secondary: #a0a0b0;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 15, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), #0f3460);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+        }
+        .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: var(--accent-light); }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .page-title h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .page-title p { color: var(--text-secondary); }
+        .upload-area {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+        }
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(233, 69, 96, 0.08);
+        }
+        .upload-area.uploaded { border-style: solid; }
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--accent-light);
+            margin-bottom: 1rem;
+        }
+        .upload-tip {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .quick-btn-group {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .quick-btn {
+            padding: 0.6rem 1.2rem;
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+            border-radius: 20px;
+            color: var(--accent-light);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .quick-btn:hover {
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateY(-2px);
+        }
+        .quick-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .input-area {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .question-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 1rem;
+            resize: none;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.3);
+        }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result-area { display: none; }
+        .result-area.active { display: block; }
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .result-title {
+            color: var(--accent-light);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+        .result-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .loading.active { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(233, 69, 96, 0.3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">
+            <div class="logo-icon">东</div>
+            <span>东玉</span>
+        </a>
+        <a href="index.html" class="back-link">← 返回首页</a>
+    </nav>
+    <div class="container">
+        <div class="page-title">
+            <h1>多模态解析</h1>
+            <p>上传照片/图片，提问并获取图文结合回答</p>
+        </div>
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-tip">点击或拖拽上传图片（JPG/PNG，最大 5MB）</div>
+            <img class="preview-img" id="previewImg" alt="图片预览">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+        </div>
+        <div class="quick-btn-group">
+            <button class="quick-btn" id="ocrBtn" disabled>📝 提取图片文字</button>
+            <button class="quick-btn" id="describeBtn" disabled>📄 生成图片描述</button>
+        </div>
+        <div class="input-area">
+            <textarea class="question-input" id="questionInput" placeholder="针对这张照片提问，我会结合图片内容为你解答..."></textarea>
+        </div>
+        <button class="submit-btn" id="submitBtn">根据照片回答问题</button>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: var(--text-secondary);">正在分析图片并解答问题...</p>
+        </div>
+        <div class="result-area" id="resultArea">
+            <div class="result-card">
+                <div class="result-title" id="resultTitle">回答结果</div>
+                <div class="result-content" id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const previewImg = document.getElementById('previewImg');
+    const questionInput = document.getElementById('questionInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const resultArea = document.getElementById('resultArea');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultContent = document.getElementById('resultContent');
+    const ocrBtn = document.getElementById('ocrBtn');
+    const describeBtn = document.getElementById('describeBtn');
+
+    let selectedImageBase64 = null;
+    let ocrTextCache = "";
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--accent)';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'var(--border)';
+    });
+    uploadArea.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--border)';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) handleImage(file);
+    });
+    imageInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) handleImage(file);
+    });
+
+    function handleImage(file) {
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片不能超过 5MB');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+            selectedImageBase64 = e.target.result;
+            ocrTextCache = "";
+            previewImg.src = selectedImageBase64;
+            previewImg.style.display = 'block';
+            uploadArea.classList.add('uploaded');
+            uploadArea.querySelector('.upload-tip').innerText = '图片已上传';
+            ocrBtn.disabled = false;
+            describeBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 增强版图片预处理
+    function preprocessImage(base64) {
+        return new Promise(resolve => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+                // 放大到合适尺寸，避免模糊
+                const scale = Math.min(2, 1000 / Math.max(img.width, img.height));
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // 灰度+对比度+锐化
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    // 灰度
+                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    // 增强对比度
+                    const contrast = 1.8;
+                    const gray = ((avg / 255 - 0.5) * contrast + 0.5) * 255;
+                    const clamped = Math.max(0, Math.min(255, gray));
+                    data[i] = data[i + 1] = data[i + 2] = clamped;
+                }
+                ctx.putImageData(imageData, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = base64;
+        });
+    }
+
+    // 增强版OCR识别
+    // 使用后端大模型识别图片文字
+ocrBtn.addEventListener('click', async () => {
+    if (!selectedImageBase64) return;
+
+    ocrBtn.disabled = true;
+    loading.classList.add('active');
+    resultArea.classList.remove('active');
+
+    try {
+        const response = await fetchWithTimeout('/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: '请识别图片中的所有文字，尽量保持原文、标点和换行。如果是手写字，请尽量辨认；看不清的地方用「[看不清]」标注。',
+                imageBase64: selectedImageBase64
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || '服务返回异常');
+        }
+
+        ocrTextCache = data.answer || '';
+        resultTitle.innerText = '图片文字提取结果';
+        resultContent.innerText = ocrTextCache || '未获取到有效文字';
+        resultArea.classList.add('active');
+    } catch (err) {
+        resultTitle.innerText = '提取失败';
+        resultContent.innerText = err.name === 'AbortError'
+            ? '请求超时，请稍后再试'
+            : (err.message || '文字识别出错，请重试');
+        resultArea.classList.add('active');
+    } finally {
+        loading.classList.remove('active');
+        ocrBtn.disabled = false;
+    }
+});
+
+    describeBtn.addEventListener('click', () => {
+        questionInput.value = '请详细描述这张照片的内容';
+        questionInput.focus();
+    });
+    async function fetchWithTimeout(url, options = {}, timeout = 60000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+        return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+// 把图片和问题发给后端，由真实多模态模型回答
+submitBtn.addEventListener('click', async () => {
+    const question = questionInput.value.trim();
+
+    if (!selectedImageBase64) {
+        alert('请先上传一张照片/图片');
+        return;
+    }
+
+    if (!question) {
+        alert('请输入你的问题');
+        return;
+    }
+
+    loading.classList.add('active');
+    resultArea.classList.remove('active');
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetchWithTimeout('/api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: question,
+                imageBase64: selectedImageBase64
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || '服务返回异常');
+        }
+
+        resultTitle.innerText = '照片问答结果';
+        resultContent.innerText = data.answer || '未获取到有效回答';
+        resultArea.classList.add('active');
+    } catch (err) {
+        resultTitle.innerText = '回答失败';
+        resultContent.innerText = err.name === 'AbortError'
+            ? '请求超时，请稍后再试'
+            : (err.message || '分析图片出错，请重新上传或稍后再试');
+        resultArea.classList.add('active');
+    } finally {
+        loading.classList.remove('active');
+        submitBtn.disabled = false;
+    }
+});
+
+    
+</script>
+</body>
+</html>

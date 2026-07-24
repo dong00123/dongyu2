@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API - 东玉搜索</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #1a1a2e;
+            --accent: #e94560;
+            --accent-light: #ff6b6b;
+            --bg: #0f0f1a;
+            --surface: #16213e;
+            --text: #eaeaea;
+            --text-secondary: #a0a0b0;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 80px;
+        }
+        .back-btn {
+            color: var(--accent-light);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .content {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+        .highlight {
+            color: var(--accent-light);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回首页</a>
+        <h1 class="page-title">API 接口</h1>
+        <div class="content">
+            <p>东玉搜索提供开放的 API 接口，让你可以轻松集成到自己的应用中。</p>
+            <p><strong class="highlight">接口地址</strong>：`https://你的域名/api`</p>
+            <p><strong class="highlight">请求方式</strong>：POST</p>
+            <p><strong class="highlight">请求参数</strong>：`{"query": "你的搜索问题"}`</p>
+            <p>我们提供了稳定的接口服务，支持高并发请求，让你的应用也能用上东玉大模型的能力。</p>
+        </div>
+    </div>
+</body>
+</html>
