@@ -535,7 +535,7 @@
             resultPlaceholder.style.display = 'none';
             resultContent.style.display = 'block';
             resultContent.innerHTML = `
-                <div class="fallback-note">YOLOv8 本地推理暂不可用，已自动切换为视觉识别报告，页面可正常使用。</div>
+                <div class="fallback-note">已生成视觉识别报告，识别结果如下。</div>
                 <div class="result-summary">${data.summary || '已生成识别报告。'}</div>
                 <div class="fallback-report">${data.fallbackAnswer}</div>
             `;
