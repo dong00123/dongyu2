@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../core/asyncHandler.js';
 import { getHealth } from '../controllers/systemController.js';
 import { createAssistantReply } from '../controllers/assistantController.js';
+import { detectVision } from '../controllers/visionController.js';
 import { createTravelPlan } from '../controllers/travelController.js';
 import {
   getAuthProviders,
@@ -42,6 +43,7 @@ router.post('/auth/logout', logout);
 router.get('/user/travel-history', asyncHandler(getTravelHistory));
 router.post('/user/travel-history/:id/favorite', asyncHandler(toggleFavoriteHistory));
 router.post('/', asyncHandler(createAssistantReply));
+router.post('/vision/detect', asyncHandler(detectVision));
 router.post('/travel', asyncHandler(createTravelPlan));
 
 router.get('/funcMenu', fetchFuncMenu);

@@ -249,7 +249,67 @@
             display: none;
             color: var(--text-secondary);
             line-height: 1.8;
-            white-space: pre-wrap;
+        }
+        .result-summary {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.02rem;
+        }
+        .result-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .meta-card {
+            border-radius: 16px;
+            padding: 0.9rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .meta-card span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            margin-bottom: 0.25rem;
+        }
+        .meta-card strong {
+            color: #fff;
+            font-size: 1rem;
+        }
+        .detection-list {
+            display: grid;
+            gap: 0.8rem;
+        }
+        .detection-item {
+            border-radius: 16px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .detection-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+        .detection-name {
+            color: #fff;
+            font-weight: 700;
+        }
+        .detection-confidence {
+            color: var(--accent-light);
+            font-weight: 700;
+        }
+        .detection-box {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+        .empty-tip {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem 0;
         }
         .loading {
             display: none;
@@ -315,8 +375,8 @@
             </div>
             <div class="tech-card panel">
                 <div class="tech-icon">🎯</div>
-                <h2>YOLOV8识别流程</h2>
-                <p>页面会把图片发送到东玉多模态接口，由模型按YOLOV8目标检测格式生成识别结果，重点呈现目标类别、置信度倾向、画面位置和应用建议。</p>
+                <h2>YOLOv8识别流程</h2>
+                <p>页面会把图片发送到东玉专用的 <strong class="highlight">YOLOv8 识别服务</strong>，由模型直接返回检测到的目标类别、置信度和位置坐标，重点呈现结构化结果。</p>
                 <div class="step-list">
                     <div class="step"><b>1.</b><span>图片预览与格式校验</span></div>
                     <div class="step"><b>2.</b><span>目标检测式内容分析</span></div>
@@ -443,7 +503,7 @@
         loading.classList.remove('active');
         resultPlaceholder.style.display = 'flex';
         resultContent.style.display = 'none';
-        resultContent.innerText = '';
+        resultContent.innerHTML = '';
     }
 
     async function fetchWithTimeout(url, options = {}, timeout = 60000) {
@@ -456,6 +516,47 @@
         }
     }
 
+    function renderDetections(data) {
+        const detections = Array.isArray(data.detections) ? data.detections : [];
+        const imageSize = data.imageSize || {};
+        const summary = data.summary || '未检测到明显目标。';
+        const totalCount = detections.length;
+        const topConfidence = totalCount
+            ? `${Math.round((detections[0].confidence || 0) * 100)}%`
+            : '—';
+
+        const detectionHtml = detections.length
+            ? detections.map((item, index) => {
+                const confidence = typeof item.confidence === 'number'
+                    ? `${Math.round(item.confidence * 100)}%`
+                    : '—';
+                const box = item.box || {};
+                return `
+                    <div class="detection-item">
+                        <div class="detection-head">
+                            <div class="detection-name">#${index + 1} ${item.label || '未知目标'}</div>
+                            <div class="detection-confidence">${confidence}</div>
+                        </div>
+                        <div class="detection-box">位置：x1 ${box.x1 ?? '—'} / y1 ${box.y1 ?? '—'} / x2 ${box.x2 ?? '—'} / y2 ${box.y2 ?? '—'}；尺寸：${box.width ?? '—'} × ${box.height ?? '—'}</div>
+                    </div>
+                `;
+            }).join('')
+            : '<div class="empty-tip">当前图片没有检测到可确认的目标。</div>';
+
+        resultPlaceholder.style.display = 'none';
+        resultContent.style.display = 'block';
+        resultContent.innerHTML = `
+            <div class="result-summary">${summary}</div>
+            <div class="result-meta">
+                <div class="meta-card"><span>检测数量</span><strong>${totalCount}</strong></div>
+                <div class="meta-card"><span>最高置信度</span><strong>${topConfidence}</strong></div>
+                <div class="meta-card"><span>图片宽度</span><strong>${imageSize.width ?? '—'}</strong></div>
+                <div class="meta-card"><span>图片高度</span><strong>${imageSize.height ?? '—'}</strong></div>
+            </div>
+            <div class="detection-list">${detectionHtml}</div>
+        `;
+    }
+
     async function detectImage() {
         if (!selectedImageBase64) {
             alert('请先上传一张图片');
@@ -466,28 +567,29 @@
         loading.classList.add('active');
         resultPlaceholder.style.display = 'none';
         resultContent.style.display = 'block';
-        resultContent.innerText = 'YOLOV8识别任务已启动...';
+        resultContent.innerHTML = '<div class="empty-tip">YOLOV8识别任务已启动...</div>';
 
         try {
-            const response = await fetchWithTimeout('/api', {
+            const response = await fetchWithTimeout('/api/vision/detect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    query: '请基于YOLOV8目标检测技术识别这张图片，按以下结构输出：1. 识别摘要；2. 检测到的目标清单，包含目标类别、画面位置、置信度倾向；3. 场景理解；4. 可用于学习、商品识别或旅游场景分析的建议。请用中文回答。',
                     imageBase64: selectedImageBase64
                 })
             });
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || '服务返回异常');
+                throw new Error(data.error || data.detail || '服务返回异常');
             }
 
-            resultContent.innerText = data.answer || '未获取到有效识别结果';
+            renderDetections(data);
         } catch (error) {
-            resultContent.innerText = error.name === 'AbortError'
+            resultPlaceholder.style.display = 'none';
+            resultContent.style.display = 'block';
+            resultContent.innerHTML = `<div class="empty-tip">${error.name === 'AbortError'
                 ? '识别请求超时，请稍后重试。'
-                : (error.message || '图片识别失败，请重新上传或稍后再试。');
+                : (error.message || '图片识别失败，请重新上传或稍后再试。')}</div>`;
         } finally {
             loading.classList.remove('active');
             detectBtn.disabled = false;
