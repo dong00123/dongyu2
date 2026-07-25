@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>隐私保护 - 东玉搜索</title>
+    <title>万物识别 - 东玉搜索</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -18,20 +18,25 @@
             --accent-light: #ff6b6b;
             --bg: #0f0f1a;
             --surface: #16213e;
+            --surface-soft: rgba(22, 33, 62, 0.72);
+            --border: #2a2a4a;
             --text: #eaeaea;
             --text-secondary: #a0a0b0;
         }
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background: var(--bg);
+            background:
+                radial-gradient(circle at 15% 12%, rgba(233, 69, 96, 0.22), transparent 32%),
+                radial-gradient(circle at 85% 15%, rgba(15, 52, 96, 0.42), transparent 35%),
+                var(--bg);
             color: var(--text);
             min-height: 100vh;
             padding: 2rem;
         }
         .container {
-            max-width: 800px;
+            max-width: 1080px;
             margin: 0 auto;
-            padding-top: 80px;
+            padding-top: 64px;
         }
         .back-btn {
             color: var(--accent-light);
@@ -39,36 +44,455 @@
             margin-bottom: 2rem;
             display: inline-block;
         }
-        .page-title {
-            font-size: 2.5rem;
+        .hero {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 1.5rem;
+            align-items: stretch;
             margin-bottom: 1.5rem;
+        }
+        .hero-card,
+        .panel {
+            background: var(--surface-soft);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(18px);
+        }
+        .hero-card {
+            padding: 2rem;
+        }
+        .eyebrow {
+            color: var(--accent-light);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.8rem;
+        }
+        .page-title {
+            font-size: clamp(2.1rem, 6vw, 4.2rem);
+            line-height: 1.1;
+            margin-bottom: 1.2rem;
             background: linear-gradient(135deg, #fff, var(--accent-light));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .content {
-            line-height: 1.8;
+        .hero-desc {
+            line-height: 1.9;
             color: var(--text-secondary);
-            font-size: 1.05rem;
-        }
-        .content p {
-            margin-bottom: 1rem;
+            font-size: 1.04rem;
+            max-width: 640px;
         }
         .highlight {
             color: var(--accent-light);
-            font-weight: 500;
+            font-weight: 700;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin-top: 1.6rem;
+        }
+        .metric {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .metric strong {
+            display: block;
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+        .metric span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .tech-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .tech-icon {
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--accent), #0f3460);
+            font-size: 2rem;
+            box-shadow: 0 12px 30px rgba(233, 69, 96, 0.28);
+        }
+        .tech-card h2 {
+            font-size: 1.45rem;
+        }
+        .tech-card p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .panel {
+            padding: 1.5rem;
+        }
+        .panel-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .panel-title h2 {
+            font-size: 1.25rem;
+        }
+        .tag {
+            color: var(--accent-light);
+            background: rgba(233, 69, 96, 0.12);
+            border: 1px solid rgba(233, 69, 96, 0.28);
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+        .upload-area {
+            min-height: 320px;
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s;
+            background: rgba(15, 15, 26, 0.48);
+        }
+        .upload-area:hover,
+        .upload-area.dragging {
+            border-color: var(--accent-light);
+            background: rgba(233, 69, 96, 0.08);
+        }
+        .upload-empty {
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+        .upload-empty div {
+            font-size: 3.2rem;
+            margin-bottom: 1rem;
+        }
+        .preview-img {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            display: none;
+        }
+        .action-row {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .primary-btn,
+        .ghost-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 0.85rem 1.2rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .primary-btn {
+            flex: 1;
+            color: white;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            font-weight: 700;
+        }
+        .ghost-btn {
+            color: var(--accent-light);
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid rgba(233, 69, 96, 0.28);
+        }
+        .primary-btn:hover,
+        .ghost-btn:hover {
+            transform: translateY(-2px);
+        }
+        .primary-btn:disabled,
+        .ghost-btn:disabled {
+            opacity: 0.56;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result-placeholder,
+        .result-content {
+            min-height: 320px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 15, 26, 0.48);
+            padding: 1.25rem;
+        }
+        .result-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .result-content {
+            display: none;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        .loading.active {
+            display: flex;
+        }
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(233, 69, 96, 0.28);
+            border-top-color: var(--accent-light);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .step-list {
+            display: grid;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        .step {
+            display: flex;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .step b {
+            color: var(--accent-light);
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 840px) {
+            body { padding: 1.2rem; }
+            .container { padding-top: 32px; }
+            .hero,
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="index.html" class="back-btn">← 返回首页</a>
-        <h1 class="page-title">🔒 隐私保护</h1>
-        <div class="content">
-            <p>东玉搜索采用<strong class="highlight">端到端加密技术</strong>，全程保护你的搜索隐私。</p>
-            <p>我们不记录你的搜索历史、不存储你的查询内容，所有数据在传输和处理过程中都经过加密，不会被泄露或用于其他用途。</p>
-            <p>严格的隐私保护机制，让你可以放心查询任何内容，不用担心个人信息被收集或滥用，每一次搜索都安全私密。</p>
-        </div>
+        <section class="hero">
+            <div class="hero-card">
+                <div class="eyebrow">YOLOV8 VISION</div>
+                <h1 class="page-title">📷 万物识别</h1>
+                <p class="hero-desc">上传一张图片，东玉会基于<strong class="highlight">YOLOV8目标检测思路</strong>分析画面中的人物、动物、交通工具、商品和场景元素，输出目标类别、位置关系与识别摘要。</p>
+                <div class="metric-grid">
+                    <div class="metric"><strong>实时检测</strong><span>适配快速识别场景</span></div>
+                    <div class="metric"><strong>多类目标</strong><span>覆盖常见物体类别</span></div>
+                    <div class="metric"><strong>视觉理解</strong><span>结合图片上下文描述</span></div>
+                </div>
+            </div>
+            <div class="tech-card panel">
+                <div class="tech-icon">🎯</div>
+                <h2>YOLOV8识别流程</h2>
+                <p>页面会把图片发送到东玉多模态接口，由模型按YOLOV8目标检测格式生成识别结果，重点呈现目标类别、置信度倾向、画面位置和应用建议。</p>
+                <div class="step-list">
+                    <div class="step"><b>1.</b><span>图片预览与格式校验</span></div>
+                    <div class="step"><b>2.</b><span>目标检测式内容分析</span></div>
+                    <div class="step"><b>3.</b><span>输出结构化识别报告</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="workspace">
+            <div class="panel">
+                <div class="panel-title">
+                    <h2>上传图片</h2>
+                    <span class="tag">JPG / PNG / WEBP</span>
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-empty" id="uploadEmpty">
+                        <div>🖼️</div>
+                        <p>点击或拖拽图片到这里</p>
+                        <p>建议图片小于 5MB，主体清晰更容易识别</p>
+                    </div>
+                    <img class="preview-img" id="previewImg" alt="待识别图片预览">
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="action-row">
+                    <button class="primary-btn" id="detectBtn" disabled>开始YOLOV8识别</button>
+                    <button class="ghost-btn" id="clearBtn" disabled>重新上传</button>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>正在进行万物识别，请稍候...</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <h2>识别结果</h2>
+                    <span class="tag">检测报告</span>
+                </div>
+                <div class="result-placeholder" id="resultPlaceholder">
+                    <p>上传图片后点击“开始YOLOV8识别”，这里会展示目标类别、位置关系、识别摘要和使用建议。</p>
+                </div>
+                <div class="result-content" id="resultContent"></div>
+            </div>
+        </section>
     </div>
+
+<script>
+    const uploadArea = document.getElementById('uploadArea');
+    const uploadEmpty = document.getElementById('uploadEmpty');
+    const imageInput = document.getElementById('imageInput');
+    const previewImg = document.getElementById('previewImg');
+    const detectBtn = document.getElementById('detectBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const loading = document.getElementById('loading');
+    const resultPlaceholder = document.getElementById('resultPlaceholder');
+    const resultContent = document.getElementById('resultContent');
+
+    let selectedImageBase64 = '';
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', event => {
+        event.preventDefault();
+        uploadArea.classList.add('dragging');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragging');
+    });
+    uploadArea.addEventListener('drop', event => {
+        event.preventDefault();
+        uploadArea.classList.remove('dragging');
+        const file = event.dataTransfer.files[0];
+        if (file) {
+            handleImage(file);
+        }
+    });
+    imageInput.addEventListener('change', event => {
+        const file = event.target.files[0];
+        if (file) {
+            handleImage(file);
+        }
+    });
+    clearBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        resetPage();
+    });
+    detectBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        detectImage();
+    });
+
+    function handleImage(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('请上传图片文件');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片不能超过 5MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = event => {
+            selectedImageBase64 = event.target.result;
+            previewImg.src = selectedImageBase64;
+            previewImg.style.display = 'block';
+            uploadEmpty.style.display = 'none';
+            detectBtn.disabled = false;
+            clearBtn.disabled = false;
+            resultPlaceholder.style.display = 'flex';
+            resultContent.style.display = 'none';
+            resultContent.innerText = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetPage() {
+        selectedImageBase64 = '';
+        imageInput.value = '';
+        previewImg.removeAttribute('src');
+        previewImg.style.display = 'none';
+        uploadEmpty.style.display = 'block';
+        detectBtn.disabled = true;
+        clearBtn.disabled = true;
+        loading.classList.remove('active');
+        resultPlaceholder.style.display = 'flex';
+        resultContent.style.display = 'none';
+        resultContent.innerText = '';
+    }
+
+    async function fetchWithTimeout(url, options = {}, timeout = 60000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    async function detectImage() {
+        if (!selectedImageBase64) {
+            alert('请先上传一张图片');
+            return;
+        }
+
+        detectBtn.disabled = true;
+        loading.classList.add('active');
+        resultPlaceholder.style.display = 'none';
+        resultContent.style.display = 'block';
+        resultContent.innerText = 'YOLOV8识别任务已启动...';
+
+        try {
+            const response = await fetchWithTimeout('/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: '请基于YOLOV8目标检测技术识别这张图片，按以下结构输出：1. 识别摘要；2. 检测到的目标清单，包含目标类别、画面位置、置信度倾向；3. 场景理解；4. 可用于学习、商品识别或旅游场景分析的建议。请用中文回答。',
+                    imageBase64: selectedImageBase64
+                })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || '服务返回异常');
+            }
+
+            resultContent.innerText = data.answer || '未获取到有效识别结果';
+        } catch (error) {
+            resultContent.innerText = error.name === 'AbortError'
+                ? '识别请求超时，请稍后重试。'
+                : (error.message || '图片识别失败，请重新上传或稍后再试。');
+        } finally {
+            loading.classList.remove('active');
+            detectBtn.disabled = false;
+        }
+    }
+</script>
 </body>
 </html>
