@@ -46,7 +46,7 @@ export const env = {
   appBaseUrl: process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 8000}`,
   bwaiApiKey: process.env.BWAI_API_KEY || '',
   bwaiModel: process.env.BWAI_MODEL || 'gpt-5.4-mini',
-  yoloServiceUrl: process.env.YOLO_SERVICE_URL || 'https://dongyu-yolo.onrender.com',
+  yoloServiceUrl: process.env.YOLO_SERVICE_URL || 'http://127.0.0.1:9001',
   tianapiKey: process.env.TIANAPI_KEY || '',
   tavilyApiKey: process.env.TAVILY_API_KEY || process.env.tavily || '',
   serperApiKey: process.env.SERPER_API_KEY || process.env.serper || '',

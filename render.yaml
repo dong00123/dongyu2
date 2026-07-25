@@ -3,8 +3,8 @@ services:
     name: dongyu-api
     runtime: node
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install && python -m pip install -r requirements.txt
+    startCommand: python -m uvicorn yolo_service:app --host 127.0.0.1 --port 9001 & npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,13 +19,6 @@ services:
       - key: PROVIDER_TIMEOUT_MS
         value: 45000
       - key: YOLO_SERVICE_URL
-        value: https://dongyu-yolo.onrender.com
-  - type: web
-    name: dongyu-yolo
-    runtime: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn yolo_service:app --host 0.0.0.0 --port $PORT
-    envVars:
+        value: http://127.0.0.1:9001
       - key: YOLO_MODEL_PATH
         value: yolov8n.pt
