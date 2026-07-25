@@ -19,10 +19,7 @@ services:
       - key: PROVIDER_TIMEOUT_MS
         value: 45000
       - key: YOLO_SERVICE_URL
-        fromService:
-          name: dongyu-yolo
-          type: web
-          property: hostport
+        value: https://dongyu-yolo.onrender.com
   - type: web
     name: dongyu-yolo
     runtime: python

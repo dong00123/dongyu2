@@ -2,7 +2,12 @@ import { env } from '../../config/env.js';
 import { AppError } from '../../core/AppError.js';
 
 function normalizeYoloBaseUrl(url) {
-  return String(url || '').trim().replace(/\/$/, '');
+  const normalized = String(url || '').trim().replace(/\/$/, '');
+
+  if (!normalized) return '';
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+
+  return `https://${normalized}`;
 }
 
 export async function detectWithYolo(imageBase64) {
