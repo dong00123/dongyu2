@@ -22,16 +22,26 @@ import {
 import { getTravelHistory, toggleFavoriteHistory } from '../controllers/userController.js';
 import {
   createKnowledge,
+  createKnowledgeCategory,
+  createCustomerReply,
   createSupportTicket,
+  createTicketReply,
+  deleteKnowledgeItem,
   fetchChannels,
   fetchConfig,
+  fetchConversation,
+  fetchConversationList,
   fetchDashboard,
   fetchFuncMenu,
+  fetchKnowledgeCategoryList,
   fetchKnowledgeList,
   fetchLogs,
   fetchRobots,
   fetchRoles,
-  fetchTickets
+  fetchTickets,
+  submitSatisfaction,
+  updateKnowledgeItem,
+  updateSupportTicketStatus
 } from '../controllers/customerServiceController.js';
 
 const router = Router();
@@ -57,10 +67,20 @@ router.post('/travel', asyncHandler(createTravelPlan));
 router.get('/funcMenu', fetchFuncMenu);
 router.get('/knowledge', fetchKnowledgeList);
 router.post('/knowledge', asyncHandler(createKnowledge));
+router.put('/knowledge/:id', asyncHandler(updateKnowledgeItem));
+router.delete('/knowledge/:id', deleteKnowledgeItem);
+router.get('/knowledge-categories', fetchKnowledgeCategoryList);
+router.post('/knowledge-categories', createKnowledgeCategory);
 router.get('/robot', fetchRobots);
 router.get('/channel', fetchChannels);
 router.get('/ticket', fetchTickets);
 router.post('/ticket', asyncHandler(createSupportTicket));
+router.patch('/ticket/:id/status', asyncHandler(updateSupportTicketStatus));
+router.post('/ticket/:id/replies', asyncHandler(createTicketReply));
+router.post('/customer/reply', asyncHandler(createCustomerReply));
+router.get('/customer/conversations', fetchConversationList);
+router.get('/customer/conversations/:id', fetchConversation);
+router.post('/customer/conversations/:id/satisfaction', submitSatisfaction);
 router.get('/data', fetchDashboard);
 router.get('/config', fetchConfig);
 router.get('/role', fetchRoles);
