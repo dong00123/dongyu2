@@ -582,6 +582,20 @@
         `;
     }
 
+    async function parseJsonSafely(response) {
+        const text = await response.text();
+        if (!text) return {};
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return {
+                fallbackAnswer: '识别服务返回了异常内容，请稍后刷新页面后重新上传图片。',
+                fallbackReason: '响应内容不是有效 JSON'
+            };
+        }
+    }
+
     async function detectImage() {
         if (!selectedImageBase64) {
             alert('请先上传一张图片');
@@ -602,10 +616,10 @@
                     imageBase64: selectedImageBase64
                 })
             });
-            const data = await response.json();
+            const data = await parseJsonSafely(response);
 
-            if (!response.ok) {
-                throw new Error(data.error || data.detail || '服务返回异常');
+            if (!response.ok && !data.fallbackAnswer) {
+                throw new Error(data.error || data.detail || '识别服务暂时不可用，请稍后重试');
             }
 
             renderDetections(data);
@@ -614,7 +628,7 @@
             resultContent.style.display = 'block';
             resultContent.innerHTML = `<div class="empty-tip">${error.name === 'AbortError'
                 ? '识别请求超时，请稍后重试。'
-                : (error.message || '图片识别失败，请重新上传或稍后再试。')}</div>`;
+                : '识别服务暂时不可用，请稍后刷新页面后重新上传图片。'}</div>`;
         } finally {
             loading.classList.remove('active');
             detectBtn.disabled = false;
