@@ -3,6 +3,11 @@ import { asyncHandler } from '../core/asyncHandler.js';
 import { getHealth } from '../controllers/systemController.js';
 import { createAssistantReply } from '../controllers/assistantController.js';
 import { detectVision } from '../controllers/visionController.js';
+import {
+  createMultimodalTask,
+  getMultimodalTask,
+  listMultimodalTask
+} from '../controllers/multimodalController.js';
 import { createTravelPlan } from '../controllers/travelController.js';
 import {
   getAuthProviders,
@@ -44,6 +49,9 @@ router.get('/user/travel-history', asyncHandler(getTravelHistory));
 router.post('/user/travel-history/:id/favorite', asyncHandler(toggleFavoriteHistory));
 router.post('/', asyncHandler(createAssistantReply));
 router.post('/vision/detect', asyncHandler(detectVision));
+router.get('/multimodal/tasks', listMultimodalTask);
+router.get('/multimodal/tasks/:id', getMultimodalTask);
+router.post('/multimodal/tasks', asyncHandler(createMultimodalTask));
 router.post('/travel', asyncHandler(createTravelPlan));
 
 router.get('/funcMenu', fetchFuncMenu);
