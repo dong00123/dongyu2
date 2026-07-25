@@ -306,6 +306,20 @@
             color: var(--text-secondary);
             font-size: 0.92rem;
         }
+        .fallback-report {
+            color: var(--text-secondary);
+            line-height: 1.9;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+        .fallback-note {
+            border-radius: 16px;
+            padding: 0.85rem 1rem;
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid rgba(233, 69, 96, 0.22);
+            color: var(--accent-light);
+            margin-bottom: 1rem;
+        }
         .empty-tip {
             color: var(--text-secondary);
             text-align: center;
@@ -517,6 +531,17 @@
     }
 
     function renderDetections(data) {
+        if (data.fallbackAnswer) {
+            resultPlaceholder.style.display = 'none';
+            resultContent.style.display = 'block';
+            resultContent.innerHTML = `
+                <div class="fallback-note">YOLOv8 本地推理暂不可用，已自动切换为视觉识别报告，页面可正常使用。</div>
+                <div class="result-summary">${data.summary || '已生成识别报告。'}</div>
+                <div class="fallback-report">${data.fallbackAnswer}</div>
+            `;
+            return;
+        }
+
         const detections = Array.isArray(data.detections) ? data.detections : [];
         const imageSize = data.imageSize || {};
         const summary = data.summary || '未检测到明显目标。';

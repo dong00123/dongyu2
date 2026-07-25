@@ -14,6 +14,8 @@ export async function detectVision(req, res) {
     summary: result.summary,
     detections: result.detections || [],
     imageSize: result.image_size || null,
-    model: result.model || 'yolov8n.pt'
+    model: result.model || 'yolov8n.pt',
+    fallbackAnswer: result.fallbackAnswer || '',
+    fallbackReason: result.fallbackReason || ''
   });
 }
