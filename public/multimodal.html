@@ -495,12 +495,29 @@
         }
     }
 
+    function toReadableRawText(rawText) {
+        const text = String(rawText || '').trim();
+        if (!text) return '暂无原始识别结果';
+        try {
+            const parsed = JSON.parse(text);
+            const parts = [];
+            if (parsed.rawText) parts.push(`识别文字：${parsed.rawText}`);
+            if (parsed.visualSummary) parts.push(`内容描述：${parsed.visualSummary}`);
+            if (Array.isArray(parsed.suggestions) && parsed.suggestions.length) {
+                parts.push(`AI建议：${parsed.suggestions.join('；')}`);
+            }
+            return parts.join('\n\n') || text;
+        } catch {
+            return text;
+        }
+    }
+
     function renderTask(task) {
         statusText.innerText = task.status || '未知';
         fileKindText.innerText = task.fileKind || '—';
         modelText.innerText = task.model || '—';
         costText.innerText = task.cost?.estimatedCostCny ? `¥${task.cost.estimatedCostCny}` : '—';
-        rawPanel.innerHTML = `<pre>${task.rawText || '暂无原始识别结果'}</pre>`;
+        rawPanel.innerHTML = `<pre>${toReadableRawText(task.rawText)}</pre>`;
         renderStructured(task.structured || {});
         suggestionPanel.innerHTML = `<pre>${(task.suggestions || []).join('\n') || '暂无建议'}</pre>`;
         logPanel.innerHTML = `<pre>${(task.logs || []).map(log => `${log.time}  ${log.message}`).join('\n') || '暂无日志'}</pre>`;

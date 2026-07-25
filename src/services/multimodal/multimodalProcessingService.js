@@ -100,9 +100,22 @@ function estimateCost(inputText, outputText) {
   };
 }
 
+function buildReadableText(parsed, answer) {
+  if (!parsed || Object.keys(parsed).length === 0) return answer || '';
+
+  const parts = [];
+  if (parsed.rawText) parts.push(`识别文字：${parsed.rawText}`);
+  if (parsed.visualSummary) parts.push(`内容描述：${parsed.visualSummary}`);
+  if (Array.isArray(parsed.suggestions) && parsed.suggestions.length) {
+    parts.push(`AI建议：${parsed.suggestions.join('；')}`);
+  }
+  if (parts.length === 0) return answer || '';
+  return parts.join('\n\n');
+}
+
 function normalizeResult(answer, prompt) {
   const parsed = extractJson(answer) || {};
-  const rawText = parsed.rawText || answer || '';
+  const rawText = buildReadableText(parsed, answer);
   const redactedText = redactSensitiveText(rawText);
   const structured = parsed.structured || {};
 
