@@ -153,7 +153,7 @@ export async function detectWithYolo(imageBase64) {
     detections: normalizeDetections(parsed, imageSize),
     imageSize,
     model: result.model || env.bwaiModel,
-    fallbackAnswer: result.answer || '未获取到有效识别结果',
+    fallbackAnswer: '',
     fallbackReason: ''
   };
 }
