@@ -45,6 +45,7 @@ export const env = {
   appName: process.env.APP_NAME || 'Dongyu Travel Agent',
   appBaseUrl: process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 8000}`,
   bwaiApiKey: process.env.BWAI_API_KEY || '',
+  bwaiBaseUrl: process.env.BWAI_BASE_URL || 'https://app.bwai.shop/v1',
   bwaiModel: process.env.BWAI_MODEL || 'gpt-5.4-mini',
   tianapiKey: process.env.TIANAPI_KEY || '',
   tavilyApiKey: process.env.TAVILY_API_KEY || process.env.tavily || '',

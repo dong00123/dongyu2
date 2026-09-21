@@ -30,7 +30,7 @@ async function requestChatCompletion(messages) {
   const timer = setTimeout(() => controller.abort(), Math.max(env.providerTimeoutMs, 45000));
 
   try {
-    const response = await fetch('https://app.bwai.shop/v1/chat/completions', {
+    const response = await fetch(`${env.bwaiBaseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${env.bwaiApiKey}`,

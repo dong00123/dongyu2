@@ -206,6 +206,18 @@ function buildPlaceHighlights(context, destination) {
   return places.length ? places : buildDefaultPlaceHighlights(destination, imageItems);
 }
 
+function formatBudgetRange(totalBudget, minRatio, maxRatio, fallback) {
+  const numericBudget = Number(String(totalBudget || '').replace(/[^0-9.]/g, ''));
+
+  if (!Number.isFinite(numericBudget) || numericBudget <= 0) {
+    return fallback;
+  }
+
+  const minAmount = Math.round((numericBudget * minRatio) / 10) * 10;
+  const maxAmount = Math.round((numericBudget * maxRatio) / 10) * 10;
+  return `约 ${minAmount} - ${maxAmount} 元`;
+}
+
 function buildFallbackPlanHtml(payload, reason) {
   const startCity = cleanText(payload.startCity);
   const endCity = cleanText(payload.endCity);
@@ -214,59 +226,95 @@ function buildFallbackPlanHtml(payload, reason) {
   const personNum = cleanText(payload.personNum, '未填写');
   const budget = cleanText(payload.budget, '未填写');
   const pref = cleanText(payload.pref, '未填写');
-  const warning = cleanText(reason, '上游服务繁忙，已先生成基础版方案');
+  const warning = cleanText(reason, '实时增强服务暂时不可用，已先生成基础版方案');
+  const transportBudget = formatBudgetRange(budget, 0.25, 0.35, '建议预留整体预算的 25% - 35%');
+  const lodgingBudget = formatBudgetRange(budget, 0.3, 0.4, '建议预留整体预算的 30% - 40%');
+  const foodBudget = formatBudgetRange(budget, 0.2, 0.25, '建议预留整体预算的 20% - 25%');
+  const flexibleBudget = formatBudgetRange(budget, 0.08, 0.12, '建议保留整体预算的 8% - 12%');
 
   return `
 <section class="result-block">
   <h4>方案总览</h4>
-  <div class="result-text">这是一份为 ${startCity} 出发、前往 ${endCity} 的基础版旅行提案。系统已保留你的城市、日期、预算和偏好，并先按顾问式交付结构生成可执行版本；稍后重新生成时，可继续升级为更细的实时增强版。</div>
-  <div class="item-line">行程信息：${startDate} 至 ${endDate}，${personNum} 人出行，整体预算 ${budget} 元。</div>
-  <div class="item-line">偏好重点：${pref}。</div>
-  <div class="date-item">生成状态：${warning}，当前内容已按基础旅行逻辑完成排版。</div>
+  <div class="result-text">这是一份从 ${startCity} 出发、前往 ${endCity} 的可执行旅行初版。系统已保留城市、日期、人数、预算和偏好，并先按真实出行逻辑补齐交通、住宿、预算、每日节奏、餐饮夜游和风险备选；后续重新生成时，可继续叠加实时票务、酒店和景点数据。</div>
+  <div class="item-line">行程信息：${startDate} 至 ${endDate}，${personNum} 人出行，整体预算 ${budget} 元；预算默认覆盖往返大交通、住宿、市内交通、餐饮、门票体验和少量机动金，不含大额购物。</div>
+  <div class="item-line">偏好重点：${pref}。规划时优先保证路线不折腾、住宿离交通节点近、每天有明确主线，并给休息和临时调整留出空间。</div>
+  <div class="date-item">生成状态：当前为基础规划版本，${warning}。页面内容已避免展示技术化报错，可直接作为行程初稿继续细化。</div>
 </section>
 <section class="result-block">
   <h4>核心判断</h4>
-  <div class="item-line">本次行程适合采用“白天核心景点 + 下午轻体验 + 晚间美食夜游”的节奏，避免把每天排得过满。</div>
-  <div class="item-line">住宿建议优先选择靠近地铁、商圈或核心景点连线的位置，减少换乘和夜间返程压力。</div>
-  <div class="item-line">如果希望拍照出片，建议把城市地标、文化街区和夜景区域安排在光线更好的下午到傍晚。</div>
+  <div class="item-line">本次行程建议采用“上午核心景点、下午轻体验、傍晚拍照、晚上美食夜游”的节奏，比全天赶景点更稳，也更适合第一次到 ${endCity} 的旅行。</div>
+  <div class="item-line">住宿应优先放在地铁站、火车站衔接区、成熟商圈或核心景点连线附近，避免为了便宜选择远郊位置，导致每天多花 1 - 2 小时在路上。</div>
+  <div class="item-line">如果天气炎热、下雨或体力下降，优先把户外景点替换成博物馆、商场、咖啡馆、城市展馆等室内点位，不要强行按原路线硬走。</div>
+  <div class="item-line">拍照和夜景建议安排在下午到傍晚，光线更柔和；正午更适合午餐、休息、室内展馆或短距离转场。</div>
 </section>
 <section class="result-block">
   <h4>交通方案与候选对比</h4>
-  <div class="item-line">高铁方案：优先关注总耗时、到达站离酒店的距离，以及抵达后是否方便直接入住。</div>
-  <div class="item-line">航班方案：适合距离较远或时间敏感的行程，但要把机场往返、安检和延误风险计入总耗时。</div>
-  <div class="item-line">自驾或包车：适合多人同行和周边点位较分散的路线，但要预留停车、限行和疲劳驾驶风险。</div>
+  <div class="item-line">高铁方案：优先作为 ${startCity} 到 ${endCity} 的主方案，重点看总耗时、到达站和酒店距离。若抵达站靠近地铁或商圈，落地后办理入住会更顺。</div>
+  <div class="item-line">航班方案：适合距离较远或车次不理想时备用，但需要把往返机场、安检、行李等待和延误风险全部计入，总耗时不一定比高铁更短。</div>
+  <div class="item-line">自驾或包车：仅在计划去周边分散景点、多人同行或携带较多行李时优先考虑；两人短途城市游通常不如公共交通和打车组合划算。</div>
+  <div class="item-line">市内交通：白天优先地铁和步行，晚间或跨区转场用打车补足；酒店选择时要重点看“步行到地铁站时间”，不要只看直线距离。</div>
 </section>
 <section class="result-block">
   <h4>住宿区域与酒店选择建议</h4>
-  <div class="item-line">优先区域：地铁换乘站、核心商圈、老城文化区边缘，兼顾交通、餐饮和夜间安全感。</div>
-  <div class="item-line">酒店选择：优先看近期真实评价、隔音、卫生、步行到地铁距离和夜间返程便利度。</div>
-  <div class="item-line">不建议区域：交通接驳弱、夜间餐饮少、离核心路线太远但价格优势不明显的位置。</div>
+  <div class="item-line">首选区域：靠近高铁站、主火车站、地铁换乘站、核心商圈或老城文化区边缘的位置，兼顾抵离便利、吃饭选择和夜间返程安全感。</div>
+  <div class="item-line">酒店筛选：优先看近 3 - 6 个月真实评价、隔音、卫生、空调、热水、床品、步行到地铁距离，以及夜间周边是否有餐饮和便利店。</div>
+  <div class="item-line">预算策略：如果总预算有限，宁可少住一点面积，也要换取更好的位置；位置太偏会把省下的房费花在打车和时间成本上。</div>
+  <div class="item-line">不建议区域：交通接驳弱、夜间餐饮少、距离核心商圈和地铁线路过远，或价格优势不明显的位置。</div>
 </section>
 <section class="result-block">
   <h4>预算拆分</h4>
-  <div class="item-line">交通：建议预留整体预算的 25% - 35%，根据高铁或航班价格浮动。</div>
-  <div class="item-line">住宿：建议预留整体预算的 30% - 40%，优先换取位置便利和休息质量。</div>
-  <div class="item-line">餐饮与体验：建议预留整体预算的 20% - 25%，把本地特色餐和夜游体验留出空间。</div>
-  <div class="item-line">机动金：建议保留 10% 左右，用于打车、临时改签、门票补差和伴手礼。</div>
+  <div class="item-line">交通预算：${transportBudget}，优先锁定往返大交通，再根据余量决定是否增加打车、机场快线或舒适座席。</div>
+  <div class="item-line">住宿预算：${lodgingBudget}，建议优先换取位置便利和睡眠质量，不要只按最低价排序。</div>
+  <div class="item-line">餐饮与体验：${foodBudget}，留给本地特色餐、咖啡甜品、夜游和少量门票体验，避免每天都吃临时凑合的餐厅。</div>
+  <div class="item-line">机动金：${flexibleBudget}，用于临时打车、改签补差、雨具、防晒、伴手礼或临时增加的体验项目。</div>
+</section>
+<section class="result-block">
+  <h4>行程节奏建议</h4>
+  <div class="date-item">每天只设置 1 个必须完成的核心目标，其余安排作为加分项；这样遇到排队、天气或体力变化时不会全盘打乱。</div>
+  <div class="date-item">上午安排博物馆、地标或需要预约的项目；下午安排街区、公园、咖啡馆或轻松体验；晚上围绕住宿附近或交通便利区域吃饭夜游。</div>
+  <div class="date-item">连续步行时间尽量控制在 60 - 90 分钟内，中间插入午餐、咖啡或回酒店休息，适合 ${personNum} 人同行时保持节奏一致。</div>
 </section>
 <section class="result-block">
   <h4>每日详细安排</h4>
-  <div class="day-plan">第一天：抵达 ${endCity} 后办理入住，下午安排酒店周边轻松熟悉路线，晚上选择本地餐厅和夜景散步，不排高强度景点。</div>
-  <div class="day-plan">第二天：上午安排城市核心景点，下午安排文化街区、博物馆或城市公园，傍晚到夜间安排拍照和美食。</div>
-  <div class="day-plan">第三天：根据体力安排周边风景、特色街区或深度体验项目，晚上回到住宿附近轻松收尾。</div>
-  <div class="day-plan">返程日：保留半天机动时间，优先安排近距离打卡、伴手礼采购和从容返程。</div>
+  <div class="day-plan">第一天：上午或中午从 ${startCity} 出发，抵达 ${endCity} 后先办理入住、放行李和短暂休息；下午只安排酒店周边、核心商圈或城市地标熟悉路线；晚上选择离酒店不远的本地餐厅，再安排 30 - 60 分钟夜景散步，不排高强度景点。</div>
+  <div class="day-plan">第二天：上午安排 ${endCity} 最值得优先体验的核心景点或博物馆，提前预约并预留 2 - 3 小时；中午在景点附近吃本地特色餐；下午转向文化街区、城市公园或室内展馆；傍晚到夜间安排拍照、夜景和美食，返程尽量选择地铁直达或短距离打车。</div>
+  <div class="day-plan">第三天：上午根据体力选择周边风景、特色街区、轻度体验项目或伴手礼采购；下午减少跨区移动，把活动控制在住宿或返程交通节点附近；晚上回到酒店周边轻松收尾，整理行李并确认返程路线。</div>
+  <div class="day-plan">返程日：保留至少半天机动时间，优先安排近距离早餐、咖啡、城市地标补拍或伴手礼采购；建议提前 60 - 90 分钟到车站，若是机场返程则提前 2 - 3 小时出发。</div>
 </section>
 <section class="result-block">
-  <h4>美食、夜游与拍照建议</h4>
-  <div class="item-line">美食：优先选择本地人常去、评价稳定、离住宿或景点不远的餐厅，不建议为了网红店长距离绕行。</div>
-  <div class="item-line">夜游：选择灯光好、返程方便、人流稳定的区域，尽量避免太偏或交通不便的点位。</div>
-  <div class="item-line">拍照：把地标外景放在下午或傍晚，把室内空间、咖啡馆和酒店公共区作为雨天备选。</div>
+  <h4>当地美食与夜生活建议</h4>
+  <div class="item-line">美食选择：优先选择本地人常去、评价稳定、离住宿或景点不远的餐厅；不要为了单个网红店长距离绕行，容易牺牲整天节奏。</div>
+  <div class="item-line">点餐策略：两人同行建议每餐控制在 2 - 3 个菜或 1 个主食加 1 - 2 个小吃，既能尝到特色，也不容易浪费预算和体力。</div>
+  <div class="item-line">夜游区域：优先选择灯光好、人流稳定、打车方便、离地铁不远的商圈、滨水步道或城市夜景区；避免太偏、太晚或返程不确定的点位。</div>
+  <div class="item-line">时间安排：夜游不要排到太晚，第二天有核心景点或早车时，建议把回酒店时间控制在 22:00 前后。</div>
 </section>
 <section class="result-block">
-  <h4>风险提醒与出发前清单</h4>
-  <div class="item-line">提前确认酒店入住时间、退改政策、身份证件、充电设备、常用药和雨具。</div>
-  <div class="item-line">重要票务和热门餐厅建议提前预约；实时交通价格以购票平台为准。</div>
-  <div class="item-line">保留 Plan B：遇到天气、拥堵或体力不足时，把户外点位替换成博物馆、商圈或咖啡馆。</div>
+  <h4>拍照打卡与体验升级建议</h4>
+  <div class="item-line">城市地标：放在下午到傍晚，光线更柔和，适合拍外景、人像和城市天际线。</div>
+  <div class="item-line">文化街区：适合安排在午后，边走边拍，同时穿插咖啡、甜品或小吃，节奏比纯打卡更舒服。</div>
+  <div class="item-line">夜景照片：选择交通便利、人流稳定的区域，拍完后能快速回酒店，不把夜间返程变成额外风险。</div>
+  <div class="item-line">雨天备选：把室内展馆、商场、书店、咖啡馆和酒店公共空间作为补充，避免照片计划完全受天气影响。</div>
+</section>
+<section class="result-block">
+  <h4>风险提醒与避坑清单</h4>
+  <div class="item-line">票务风险：热门场馆、演出和部分景点建议提前预约；实时交通价格和余票以正式购票平台为准。</div>
+  <div class="item-line">天气风险：出发前查看 ${endCity} 逐日天气，准备雨具、防晒、舒适鞋和薄外套；高温时减少正午户外暴走。</div>
+  <div class="item-line">住宿风险：下单前确认入住时间、取消政策、押金规则、发票需求、是否有电梯，以及夜间返程是否方便。</div>
+  <div class="item-line">节奏风险：不要把远距离周边景点和市区核心点强行塞进同一天；一旦交通超过预期，优先删掉非核心项目。</div>
+</section>
+<section class="result-block">
+  <h4>Plan B 备选方案</h4>
+  <div class="item-line">天气不好：把户外点位替换成博物馆、商场、书店、咖啡馆、城市展馆或室内体验项目。</div>
+  <div class="item-line">体力不足：取消跨区景点，改为酒店附近餐饮、短途散步和轻松拍照，保证第二天状态。</div>
+  <div class="item-line">交通延误：优先保留入住、正餐和返程节点，压缩拍照打卡和购物时间，不影响关键安排。</div>
+  <div class="item-line">预算紧张：减少打车和网红餐厅，保留核心景点、位置合适的住宿和必要交通，把体验集中在最想去的 1 - 2 个项目上。</div>
+</section>
+<section class="result-block">
+  <h4>出发前准备清单</h4>
+  <div class="item-line">证件与票务：身份证件、车票或机票、酒店订单、预约二维码、紧急联系人和电子备份。</div>
+  <div class="item-line">随身物品：充电器、充电宝、雨伞、防晒、纸巾、常用药、舒适鞋和轻便背包。</div>
+  <div class="item-line">行程确认：出发前一天再次确认天气、交通时间、酒店位置、入住政策和第一天晚餐备选。</div>
+  <div class="item-line">沟通约定：${personNum} 人同行时，提前确认每天最想完成的核心目标，避免现场因为取舍产生分歧。</div>
 </section>`.trim();
 }
 
