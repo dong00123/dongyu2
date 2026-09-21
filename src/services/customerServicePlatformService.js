@@ -197,3 +197,23 @@ export function fetchCustomerStats() {
 export function fetchCustomerLogs(limit) {
   return { logs: listCustomerServiceLogs(limit) };
 }
+
+export function submitSatisfaction(conversationId, score) {
+  if (!conversationId) throw new AppError('会话ID不能为空', 400);
+
+  const numericScore = Number(score);
+  if (!Number.isFinite(numericScore) || numericScore < 1 || numericScore > 5) {
+    throw new AppError('满意度评分需为 1-5 的数字', 400);
+  }
+
+  const conversation = getConversation(conversationId);
+  if (!conversation) throw new AppError('会话不存在', 404);
+
+  updateConversation({
+    id: conversationId,
+    satisfaction: numericScore,
+    context: { ...(conversation.context || {}), satisfactionAt: new Date().toISOString() }
+  });
+
+  return { conversationId, score: numericScore };
+}

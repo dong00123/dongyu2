@@ -174,7 +174,17 @@ export async function processMultimodalFile(payload) {
   try {
     const prompt = buildPrompt({ fileKind, scenario, userPrompt });
     logs.push({ time: new Date().toISOString(), message: '开始调用多模态模型' });
-    const result = await askAssistant({ query: prompt, imageBase64: fileBase64 });
+
+    const isImageLike = fileKind === 'image' || fileKind === 'screenshot';
+    let result;
+    if (isImageLike) {
+      result = await askAssistant({ query: prompt, imageBase64: fileBase64 });
+    } else {
+      result = await askAssistant({
+        query: `${prompt}\n\n注意：本次上传的是 ${fileType || fileKind} 格式文件（文件名：${fileName || '未知'}，大小：${fileSize || '未知'}），当前模型暂不支持直接解析该格式的原始内容。请基于以上信息给出：1) 该类型文件建议如何转换为可识别格式（如图片、截图）；2) 转换后建议重点核对的字段；3) 如无法确认文件内容，请如实说明，不要编造文件中并不存在的内容。`
+      });
+    }
+
     logs.push({ time: new Date().toISOString(), message: '模型调用完成，开始结构化解析' });
     const normalized = normalizeResult(result.answer, prompt);
     createMultimodalResult({

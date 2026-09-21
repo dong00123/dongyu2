@@ -11,10 +11,11 @@ import {
   fetchCustomerStats,
   fetchKnowledgeBase,
   fetchKnowledgeCategories,
-  fetchTickets,
+  fetchTickets as fetchTicketList,
   removeKnowledgeBase,
   replyCustomerMessage,
-  replyTicket
+  replyTicket,
+  submitSatisfaction as submitSatisfactionRecord
 } from '../services/customerServicePlatformService.js';
 import {
   getChannels,
@@ -61,7 +62,7 @@ export function fetchChannels(req, res) {
 }
 
 export function fetchTickets(req, res) {
-  res.json(fetchTickets(Number(req.query.limit || 50)));
+  res.json(fetchTicketList(Number(req.query.limit || 50)));
 }
 
 export function createSupportTicket(req, res) {
@@ -106,6 +107,5 @@ export function fetchLogs(req, res) {
 
 export function submitSatisfaction(req, res) {
   const { score } = req.body || {};
-  if (!score) throw new AppError('满意度评分不能为空', 400);
-  res.json({ msg: '满意度评价已记录', score });
+  res.json(submitSatisfactionRecord(req.params.id, score));
 }

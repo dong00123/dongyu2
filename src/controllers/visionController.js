@@ -14,7 +14,7 @@ export async function detectVision(req, res) {
     return res.json({
       summary: result.summary,
       detections: result.detections || [],
-      imageSize: result.image_size || null,
+      imageSize: result.imageSize || result.image_size || null,
       model: result.model || 'yolov8n.pt',
       fallbackAnswer: result.fallbackAnswer || '',
       fallbackReason: result.fallbackReason || ''
