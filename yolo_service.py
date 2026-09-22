@@ -6,15 +6,12 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
+import numpy as np
+import onnxruntime as ort
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
 from PIL import Image
-
-try:
-    from ultralytics import YOLO
-except Exception:  # pragma: no cover
-    YOLO = None
+from pydantic import BaseModel, Field
 
 COCO_NAMES_ZH = {
     "person": "人", "bicycle": "自行车", "car": "汽车", "motorcycle": "摩托车",
@@ -53,6 +50,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 置信度/IOU 阈值沿用 ultralytics predict 默认值
+CONF_THRES = float(os.getenv("YOLO_CONF_THRES", "0.25"))
+IOU_THRES = float(os.getenv("YOLO_IOU_THRES", "0.45"))
+INPUT_SIZE = int(os.getenv("YOLO_INPUT_SIZE", "640"))
+
 
 class DetectRequest(BaseModel):
     image_base64: str = Field(..., description="Base64 图片数据")
@@ -65,21 +67,30 @@ class DetectionItem:
     box: dict[str, float]
 
 
-_model: Any | None = None
+_session: ort.InferenceSession | None = None
 
 
-def load_model() -> Any:
-    global _model
+def load_model() -> ort.InferenceSession:
+    global _session
 
-    if _model is not None:
-        return _model
+    if _session is not None:
+        return _session
 
-    model_path = os.getenv("YOLO_MODEL_PATH", "yolov8n.pt")
-    if YOLO is None:
-        raise RuntimeError("ultralytics 未安装，无法加载 YOLOv8 模型")
+    model_path = os.getenv("YOLO_MODEL_PATH", "yolov8n.onnx")
+    if not os.path.exists(model_path):
+        raise RuntimeError(f"ONNX 模型文件不存在: {model_path}")
 
-    _model = YOLO(model_path)
-    return _model
+    so = ort.SessionOptions()
+    # CPU 推理，限制内部线程数，降低小内存实例上的资源竞争与峰值内存
+    so.intra_op_num_threads = int(os.getenv("ORT_INTRA_OP_NUM_THREADS", "2"))
+    so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+    _session = ort.InferenceSession(
+        model_path,
+        sess_options=so,
+        providers=["CPUExecutionProvider"],
+    )
+    return _session
 
 
 def decode_image(image_base64: str) -> Image.Image:
@@ -98,15 +109,76 @@ def decode_image(image_base64: str) -> Image.Image:
         raise HTTPException(status_code=400, detail="图片内容无法识别") from exc
 
 
-def convert_box(box: Any) -> dict[str, float]:
-    coords = box.xyxy[0].tolist()
+def letterbox_image(
+    image: Image.Image,
+    new_size: int = 640,
+    color: tuple[int, int, int] = (114, 114, 114),
+) -> tuple[np.ndarray, float, int, int]:
+    """等比例缩放 + 灰边填充到 new_size x new_size，返回 (blob, ratio, pad_left, pad_top)"""
+    width, height = image.size  # PIL: (w, h)
+    ratio = min(new_size / width, new_size / height)
+    new_w = int(round(width * ratio))
+    new_h = int(round(height * ratio))
+
+    resized = image.resize((new_w, new_h), Image.BILINEAR)
+    pad_left = (new_size - new_w) // 2
+    pad_top = (new_size - new_h) // 2
+
+    canvas = Image.new("RGB", (new_size, new_size), color)
+    canvas.paste(resized, (pad_left, pad_top))
+
+    blob = np.asarray(canvas, dtype=np.float32) / 255.0  # (h, w, 3) 0~1
+    blob = blob.transpose(2, 0, 1)[None, ...]  # (1, 3, h, w)
+    return blob, ratio, pad_left, pad_top
+
+
+def xywh_to_xyxy(boxes: np.ndarray) -> np.ndarray:
+    """cxcywh -> xyxy（640 输入坐标系）"""
+    out = np.empty_like(boxes)
+    out[:, 0] = boxes[:, 0] - boxes[:, 2] / 2.0
+    out[:, 1] = boxes[:, 1] - boxes[:, 3] / 2.0
+    out[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.0
+    out[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.0
+    return out
+
+
+def nms(boxes_xyxy: np.ndarray, scores: np.ndarray, iou_thres: float) -> list[int]:
+    """标准 NMS，返回保留索引（按置信度降序）"""
+    if boxes_xyxy.shape[0] == 0:
+        return []
+
+    x1, y1, x2, y2 = boxes_xyxy.T
+    areas = np.maximum(0.0, x2 - x1) * np.maximum(0.0, y2 - y1)
+    order = scores.argsort()[::-1]
+    keep: list[int] = []
+
+    while order.size > 0:
+        i = int(order[0])
+        keep.append(i)
+
+        xx1 = np.maximum(x1[i], x1[order[1:]])
+        yy1 = np.maximum(y1[i], y1[order[1:]])
+        xx2 = np.minimum(x2[i], x2[order[1:]])
+        yy2 = np.minimum(y2[i], y2[order[1:]])
+        w = np.maximum(0.0, xx2 - xx1)
+        h = np.maximum(0.0, yy2 - yy1)
+        inter = w * h
+        union = areas[i] + areas[order[1:]] - inter + 1e-9
+        iou = inter / union
+
+        order = order[1:][iou <= iou_thres]
+
+    return keep
+
+
+def convert_box(x1: float, y1: float, x2: float, y2: float) -> dict[str, float]:
     return {
-        "x1": round(float(coords[0]), 2),
-        "y1": round(float(coords[1]), 2),
-        "x2": round(float(coords[2]), 2),
-        "y2": round(float(coords[3]), 2),
-        "width": round(float(coords[2] - coords[0]), 2),
-        "height": round(float(coords[3] - coords[1]), 2),
+        "x1": round(float(x1), 2),
+        "y1": round(float(y1), 2),
+        "x2": round(float(x2), 2),
+        "y2": round(float(y2), 2),
+        "width": round(float(x2 - x1), 2),
+        "height": round(float(y2 - y1), 2),
     }
 
 
@@ -118,31 +190,63 @@ def health() -> dict[str, str]:
 @app.post("/detect")
 def detect(request: DetectRequest) -> dict[str, Any]:
     image = decode_image(request.image_base64)
+    width, height = image.size
 
     try:
-        model = load_model()
-        result = model.predict(image, verbose=False)[0]
+        session = load_model()
+        blob, ratio, pad_left, pad_top = letterbox_image(image, INPUT_SIZE)
+
+        input_name = session.get_inputs()[0].name
+        output = session.run(None, {input_name: blob})[0]  # (1, 84, 8400)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"YOLOv8 推理失败: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"YOLOv8 ONNX 推理失败: {exc}") from exc
 
-    names = result.names or {}
+    preds = np.asarray(output)[0].T  # (8400, 84): 每行 [cx, cy, w, h] + 80 类分数
+    boxes_xywh = preds[:, :4]
+    class_scores = preds[:, 4:]
+
+    class_ids = class_scores.argmax(axis=1)
+    confidences = class_scores.max(axis=1)
+
+    keep_mask = confidences > CONF_THRES
+    if not keep_mask.any():
+        return {
+            "summary": "未检测到明显目标。",
+            "detections": [],
+            "image_size": {"width": width, "height": height},
+            "model": os.getenv("YOLO_MODEL_PATH", "yolov8n.onnx"),
+        }
+
+    boxes_xyxy = xywh_to_xyxy(boxes_xywh[keep_mask])
+    confs = confidences[keep_mask]
+    ids = class_ids[keep_mask]
+
+    keep_idx = nms(boxes_xyxy, confs, IOU_THRES)
+
     detections: list[dict[str, Any]] = []
+    for idx in keep_idx:
+        x1 = (boxes_xyxy[idx][0] - pad_left) / ratio
+        y1 = (boxes_xyxy[idx][1] - pad_top) / ratio
+        x2 = (boxes_xyxy[idx][2] - pad_left) / ratio
+        y2 = (boxes_xyxy[idx][3] - pad_top) / ratio
 
-    boxes = getattr(result, "boxes", None)
-    if boxes is not None:
-        for box in boxes:
-            cls_id = int(box.cls[0])
-            confidence = float(box.conf[0])
-            label = names.get(cls_id, f"class_{cls_id}")
-            label_zh = COCO_NAMES_ZH.get(label, label)
-            detections.append(
-                {
-                    "label": label,
-                    "label_zh": label_zh,
-                    "confidence": round(confidence, 4),
-                    "box": convert_box(box),
-                }
-            )
+        # 裁剪到原图边界
+        x1 = max(0.0, min(float(x1), float(width)))
+        y1 = max(0.0, min(float(y1), float(height)))
+        x2 = max(0.0, min(float(x2), float(width)))
+        y2 = max(0.0, min(float(y2), float(height)))
+
+        cls_id = int(ids[idx])
+        label = COCO_NAMES[cls_id] if cls_id < len(COCO_NAMES) else f"class_{cls_id}"
+        label_zh = COCO_NAMES_ZH.get(label, label)
+        detections.append(
+            {
+                "label": label,
+                "label_zh": label_zh,
+                "confidence": round(float(confs[idx]), 4),
+                "box": convert_box(x1, y1, x2, y2),
+            }
+        )
 
     detections.sort(key=lambda item: item["confidence"], reverse=True)
 
@@ -154,6 +258,23 @@ def detect(request: DetectRequest) -> dict[str, Any]:
     return {
         "summary": summary,
         "detections": detections,
-        "image_size": {"width": image.width, "height": image.height},
-        "model": os.getenv("YOLO_MODEL_PATH", "yolov8n.pt"),
+        "image_size": {"width": width, "height": height},
+        "model": os.getenv("YOLO_MODEL_PATH", "yolov8n.onnx"),
     }
+
+
+# COCO 80 类英文标签（ultralytics coco.yaml 顺序），与 COCO_NAMES_ZH 键对应
+COCO_NAMES = [
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
+    "truck", "boat", "traffic light", "fire hydrant", "stop sign",
+    "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag",
+    "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+    "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket",
+    "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana",
+    "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza",
+    "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table",
+    "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock",
+    "vase", "scissors", "teddy bear", "hair drier", "toothbrush",
+]
