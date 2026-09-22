@@ -559,7 +559,7 @@
                 return `
                     <div class="detection-item">
                         <div class="detection-head">
-                            <div class="detection-name">#${index + 1} ${item.label || '未知目标'}</div>
+                            <div class="detection-name">#${index + 1} ${item.label_zh || item.label || '未知目标'}</div>
                             <div class="detection-confidence">${confidence}</div>
                         </div>
                         <div class="detection-box">位置：x1 ${box.x1 ?? '—'} / y1 ${box.y1 ?? '—'} / x2 ${box.x2 ?? '—'} / y2 ${box.y2 ?? '—'}；尺寸：${box.width ?? '—'} × ${box.height ?? '—'}</div>

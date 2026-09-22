@@ -18,3 +18,14 @@ services:
         value: 900000
       - key: PROVIDER_TIMEOUT_MS
         value: 45000
+      - key: YOLO_SERVICE_URL
+        value: https://dongyu-yolo.onrender.com
+  - type: web
+    name: dongyu-yolo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
+    startCommand: uvicorn yolo_service:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: YOLO_MODEL_PATH
+        value: yolov8n.pt

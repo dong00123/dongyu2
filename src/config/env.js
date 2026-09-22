@@ -57,7 +57,9 @@ export const env = {
   wechatClientSecret: process.env.WECHAT_CLIENT_SECRET || '',
   apifyPlacesActorId: process.env.APIFY_PLACES_ACTOR_ID || 'compass~crawler-google-places',
   travelResearchCacheTtlMs: Number(process.env.TRAVEL_RESEARCH_CACHE_TTL_MS || 15 * 60 * 1000),
-  providerTimeoutMs: Number(process.env.PROVIDER_TIMEOUT_MS || 15000)
+  providerTimeoutMs: Number(process.env.PROVIDER_TIMEOUT_MS || 15000),
+  yoloServiceUrl: process.env.YOLO_SERVICE_URL || 'http://127.0.0.1:8001',
+  yoloTimeoutMs: Number(process.env.YOLO_TIMEOUT_MS || 45000)
 };
 
 export function getEnvSummary() {

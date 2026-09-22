@@ -1,3 +1,7 @@
 .env.local
 .npm-cache
 node_modules
+__pycache__/
+*.pyc
+*.pt
+yoloService_*.js
